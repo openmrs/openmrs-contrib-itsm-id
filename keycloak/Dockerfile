@@ -7,7 +7,6 @@ COPY keycloak-extension/pom.xml .
 
 COPY keycloak-extension/src ./src
 
-# Build the Maven project and create a JAR file
 RUN mvn clean install -DskipTests
 
 # Stage 2: Build the TypeScript application
@@ -30,9 +29,10 @@ FROM quay.io/keycloak/keycloak:22.0 as builder
 ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
 
-# Configure a database vendor
+# Configure the database vendor
 ENV KC_DB=postgres
 
+# Copy the extension and the theme into the Keycloak distribution
 COPY --from=extension-builder /app/target/*.jar /opt/keycloak/providers
 COPY --from=theme-builder /theme/out/*.jar /opt/keycloak/providers
 
