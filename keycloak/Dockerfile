@@ -24,7 +24,7 @@ RUN npm run build
 RUN npm run build:jar
 
 # Stage 3: Build the Keycloak including the theme and the extension
-FROM quay.io/keycloak/keycloak:latest as builder
+FROM quay.io/keycloak/keycloak:22.0 as builder
 
 # Enable health and metrics support
 ENV KC_HEALTH_ENABLED=true
@@ -42,7 +42,7 @@ WORKDIR /opt/keycloak
 RUN keytool -genkeypair -storepass password -storetype PKCS12 -keyalg RSA -keysize 2048 -dname "CN=server" -alias server -ext "SAN:c=DNS:localhost,IP:127.0.0.1" -keystore conf/server.keystore
 RUN /opt/keycloak/bin/kc.sh build
 
-FROM quay.io/keycloak/keycloak:latest
+FROM quay.io/keycloak/keycloak:22.0
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
 USER 1001
