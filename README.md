@@ -1,6 +1,6 @@
 # OpenMRS ID
 
-This repository contains the following
+This repository contains the following components that are used to run OpenMRS ID:
 
 1. Keycloak extension
 2. Postfix Docker configuration
