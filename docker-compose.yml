@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-keycloak}
+      POSTGRES_USER: ${POSTGRES_USER:-keycloak}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+  keycloak:
+    build:
+      context: keycloak
+      dockerfile: Dockerfile
+    environment:
+      - KC_HOSTNAME=${HOSTNAME:-localhost}
+      - KC_DB=postgres
+      - KC_DB_URL_DATABASE=${POSTGRES_DB:-keycloak}
+      - KC_DB_URL_HOST=postgres
+      - KC_DB_URL_PORT=5432
+      - KC_DB_USERNAME=${POSTGRES_USER:-keycloak}
+      - KC_DB_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-password}
+    ports:
+      - "8443:8443"
+    depends_on:
+      - postgres
+  postfix:
+    container_name: postfix
+    build:
+      context: postfix
+      dockerfile: Dockerfile
+      args:
+        - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
+        - SMTP_PORT=${SMTP_PORT:-587}
+        - SMTP_USERNAME=${SMTP_USERNAME:-username}
+        - SMTP_PASSWORD=${SMTP_PASSWORD:-password}
+        - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-password}
+    ports:
+      - "25:25"
+volumes:
+  postgres_data:
+    driver: local
+  postfix_data:
+    driver: local

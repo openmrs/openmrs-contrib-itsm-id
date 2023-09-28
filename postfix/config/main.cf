@@ -1,0 +1,65 @@
+# Basic Postfix Configuration
+
+# Set the hostname and domain
+myhostname = id.openmrs.org
+mydomain = $myhostname
+
+
+# Specify the destinations that are considered local
+mydestination = $myhostname, localhost.$mydomain, localhost
+
+# Define the networks that are allowed to relay through this mail server
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+
+# Set the default message size limit
+message_size_limit = 10485760
+
+# Enable SASL authentication
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_type = cyrus
+smtpd_sasl_path = smtpd
+smtpd_sasl_security_options = noanonymous
+smtpd_sasl_local_domain = $myhostname
+
+# TLS Configuration
+smtpd_tls_security_level = may
+smtpd_tls_cert_file = /etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_tls_received_header = yes
+smtpd_tls_session_cache_timeout = 3600s
+tls_random_source = dev:/dev/urandom
+
+# Enable SMTP over TLS encryption
+smtp_tls_security_level = may
+smtp_tls_loglevel = 1
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+# Restrict which clients can connect to this mail server
+smtpd_client_restrictions =
+    permit_mynetworks,
+    reject_unknown_client,
+    permit
+
+smtpd_recipient_restrictions = permit_mynetworks, reject_unauth_destination
+
+# Specify the location for virtual mailbox mappings
+virtual_mailbox_domains = localhost
+virtual_mailbox_base = /var/mail/vhosts
+# virtual_mailbox_maps = hash:/etc/postfix/vmailbox
+# virtual_alias_maps = hash:/etc/postfix/virtual
+
+# Enable virtual delivery
+# virtual_transport = lmtp:unix:private/dovecot-lmtp
+
+maillog_file = /var/log/mail.log
+
+debug_peer_list = localhost
+debug_peer_level = 2
+
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+
+alias_maps = ldap:/etc/postfix/ldap-aliases.cf

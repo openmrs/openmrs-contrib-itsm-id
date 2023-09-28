@@ -1,0 +1,5 @@
+.idea/*
+interceptor/node_modules/*
+interceptor/build/*
+postfix/config/sasl_passwd
+keycloak-extension/target/*
