@@ -25,7 +25,10 @@ services:
       - KC_DB_PASSWORD=${POSTGRES_PASSWORD:-password}
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-password}
+      - KC_PROXY=${KC_PROXY:-none}
+      - PROXY_ADDRESS_FORWARDING=${PROXY_ADDRESS_FORWARDING:-false}
     ports:
+      - "8080:8080"
       - "8443:8443"
     depends_on:
       - postgres
@@ -34,14 +37,14 @@ services:
     build:
       context: postfix
       dockerfile: Dockerfile
-      args:
-        - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
-        - SMTP_PORT=${SMTP_PORT:-587}
-        - SMTP_USERNAME=${SMTP_USERNAME:-username}
-        - SMTP_PASSWORD=${SMTP_PASSWORD:-password}
-        - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-password}
     ports:
       - "25:25"
+    environment:
+      - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-username}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-password}
+      - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-password}
 volumes:
   postgres_data:
     driver: local
