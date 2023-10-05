@@ -38,9 +38,6 @@ COPY --from=theme-builder /theme/out/*.jar /opt/keycloak/providers
 
 WORKDIR /opt/keycloak
 
-# IF DEV_MODE arguemnt is true execute the following command else don't
-ARG DEV_MODE
-
 # Generate a self-signed certificate for local development
 RUN keytool -genkeypair -storepass password -storetype PKCS12 -keyalg RSA -keysize 2048 -dname "CN=server" -alias server -ext "SAN:c=DNS:localhost,IP:127.0.0.1" -keystore conf/server.keystore
 
