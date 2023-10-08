@@ -46,6 +46,7 @@ RUN /opt/keycloak/bin/kc.sh build
 FROM quay.io/keycloak/keycloak:22.0
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
+COPY ./realm-export.json /opt/keycloak/data/import/
 USER 1001
 
-CMD ["start", "--optimized"]
+CMD ["start", "--optimized", "--import-realm"]

@@ -25,11 +25,13 @@ services:
       - KC_DB_PASSWORD=${POSTGRES_PASSWORD:-password}
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-password}
-      - KC_PROXY=${KC_PROXY:-none}
-      - PROXY_ADDRESS_FORWARDING=${PROXY_ADDRESS_FORWARDING:-false}
+      # Use when behind load balancer with SSL
+      # - KC_PROXY=edge
+      #- PROXY_ADDRESS_FORWARDING=true
     ports:
-      - "8080:8080"
       - "8443:8443"
+      # Use when behind load balancer with SSL
+      #- "8080:8080"
     depends_on:
       - postgres
   postfix:
