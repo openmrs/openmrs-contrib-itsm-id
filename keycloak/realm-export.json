@@ -65,8 +65,8 @@
   "otpPolicyCodeReusable": false,
   "otpSupportedApplications": [
     "totpAppMicrosoftAuthenticatorName",
-    "totpAppFreeOTPName",
-    "totpAppGoogleName"
+    "totpAppGoogleName",
+    "totpAppFreeOTPName"
   ],
   "webAuthnPolicyRpEntityName": "keycloak",
   "webAuthnPolicySignatureAlgorithms": [
@@ -280,6 +280,7 @@
         "saml.force.post.binding": "true",
         "saml.encrypt": "false",
         "post.logout.redirect.uris": "+",
+        "saml_idp_initiated_sso_url_name": "atlassian",
         "saml.server.signature": "true",
         "saml.server.signature.keyinfo.ext": "false",
         "saml.signing.certificate": "MIICoTCCAYkCBgGLDIla7DANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAlhdGxhc3NpYW4wHhcNMjMxMDA3MjM0NTEwWhcNMzMxMDA3MjM0NjUwWjAUMRIwEAYDVQQDDAlhdGxhc3NpYW4wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDA+eVAvI8H0A2cVC7jMQAdayHwT9Xeu8duFd5k7PbXrl2XR8v0oydP0Sz8rYTcZFh8LLefPFgyf0Y6SUokX88NJ2b3PRgJQvKgjbKKItJjSH3IEynalx9pLAZUBQXn1OIf2ZpX8HEOTcc7gU4BCN/ehHncKrlPGt3hxBweU3qcoxG8nz3GcSzKoyD0fT0+YadcHWpqRHPoiPn5ldFnBMULaL11qpgMWlw59SRldVA9nchpUgAppig4EcEOUJSNtp4tVT0vx3/6aL9Qyali55rgtrDA1TQ98b6wDm1ev5Rh+OHRblgapjstm6L+Y/nYiVjJfwEfM3JxSGzQMsr9g1HVAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAKdqN2bNIAPFblKums2xtXISluHd4D3guOELQapW7PmCeqe9mj76BdO5/trTiSc+aPh0CM4pGbxjjiYd3ada0NO5/Bo84MMdLoMGRTwTjgGXxvWrQ3a/zGhaUd8FCIY15favQRAeFCWzMTIWTIUILqwNvH8bZlHrt6U+gjJmohoqaXo8xxDwqVaQVGDxo0x/pkgBQCV4HM/VkEFTN+srMQ4LxJi/pwMWi0yKbq1eJGlzKUUxUiXgWa3p7aLeLi36m7FGMAeapQwTQezxUMrwA1sEGa2AG4nKHxYtxHVyabu8W0fVoWqSWL78xolSc/hTSFHyip4fwFSAIBGMNle9wvM=",

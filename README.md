@@ -1,12 +1,30 @@
 # OpenMRS ID
 
+## Setup
+
+The Keycloak instance is pre-filled with the required configuration under the `OpenMRS` realm. However, you need to add the following to the Keycloak instance:
+
+### Connecting to Atlassian
+
+This setup will use SAML to connect to Atlassian. You need to add the following to the Keycloak instance:
+
+1. Follow this guide to create a new SAML client in Atlassian: https://support.atlassian.com/security-and-access-policies/docs/configure-saml-single-sign-on-with-an-identity-provider/
+2. Copy the following values from Keycloak to Atlassian:
+   - Identity provider Entity ID: `https://id.openmrs.org/realms/openmrs`
+   - Identity provider SSO URL: `https://jayasanka.me/realms/openmrs/protocol/saml/clients/atlassian`
+   - SAML X.509 Certificate: This can be found in Realm Settings > Keys > RS256 > Certificate
+3. Copy the following values from Atlassian to Keycloak:
+   - Service provider assertion consumer service URL: Copy this value to the "Assertion Consumer Service POST Binding URL" field in the advanced setting tab of the Keycloak client.
+
+## Components
+
 This repository contains the following components that are used to run OpenMRS ID:
 
 1. Keycloak extension
 2. Postfix Docker configuration
 3. Keycloak Theme
 
-## Keycloak Extension
+### Keycloak Extension
 
 OpenMRS needs users to be login to Atlassian cloud through OpenMRS ID to make it easier for people to be recognized
 across community services and to reduce the burden of supporting accounts across multiple services.
@@ -46,7 +64,7 @@ The extension is building as a jar and it will be copied to the keycloak image w
 more about keycloak extensions
 here: [Service Provider Interfaces (SPI)](https://www.keycloak.org/docs/latest/server_development/#_providers)
 
-## Keycloak Extension
+### Keycloak Extension
 
 OpenMRS requires users to log in to Atlassian cloud through OpenMRS ID. This makes it easier for people to be recognized
 across community services and reduces the burden of supporting multiple accounts. However, currently Atlassian cloud
@@ -82,7 +100,7 @@ Choose "OpenMRS Mapper For NameID."
 The extension is built as a `jar` and will be copied to the Keycloak image during the Keycloak image build. Learn more
 about Keycloak extensions [here](a link).
 
-## Postfix
+### Postfix
 
 The user's email is saved by Atlassian as the virtual email address mentioned above. As a result, all notifications and
 other emails are sent to the virtual email address. A mechanism was needed to forward these emails to the user's actual
@@ -94,7 +112,7 @@ the received email address. Then, it retrieves the email address of the returned
 
 ![Untitled](docs/Untitled.png)
 
-## Keycloak Theme
+### Keycloak Theme
 
 This theme is to enhace the look and feel of the login and registration process.
 
@@ -102,7 +120,7 @@ This is a custom theme for OpenMRS ID based on the [Keywind](https://github.com/
 more about Keycloak themes here: [Keycloak Themes](https://www.keycloak.org/docs/latest/server_development/#_themes).
 ![Preview](docs/preview.jpeg)
 
-### **Add a custom announcement**
+#### **Add a custom announcement**
 
 To add a custom announcement, you can edit the `template.ftl` file.
 
