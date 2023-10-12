@@ -11,7 +11,7 @@ This setup will use SAML to connect to Atlassian. You need to add the following 
 1. Follow this guide to create a new SAML client in Atlassian: https://support.atlassian.com/security-and-access-policies/docs/configure-saml-single-sign-on-with-an-identity-provider/
 2. Copy the following values from Keycloak to Atlassian:
    - Identity provider Entity ID: `https://id.openmrs.org/realms/openmrs`
-   - Identity provider SSO URL: `https://jayasanka.me/realms/openmrs/protocol/saml/clients/atlassian`
+   - Identity provider SSO URL: `https://id.openmrs.org/realms/openmrs/protocol/saml/clients/atlassian`
    - SAML X.509 Certificate: This can be found in Realm Settings > Keys > RS256 > Certificate
 3. Copy the following values from Atlassian to Keycloak:
    - Service provider assertion consumer service URL: Copy this value to the "Assertion Consumer Service POST Binding URL" field in the advanced setting tab of the Keycloak client.
