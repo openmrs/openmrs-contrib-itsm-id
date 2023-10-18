@@ -27,7 +27,7 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-password}
       # Use when behind load balancer with SSL
       # - KC_PROXY=edge
-      #- PROXY_ADDRESS_FORWARDING=true
+      # - PROXY_ADDRESS_FORWARDING=true
     ports:
       - "8443:8443"
       # Use when behind load balancer with SSL
@@ -47,8 +47,8 @@ services:
       - SMTP_USERNAME=${SMTP_USERNAME:-username}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-password}
       - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-password}
+      - LDAP_HOST=${LDAP_HOST:-openldap}
+      - LDAP_PORT=${LDAP_PORT:-389}
 volumes:
   postgres_data:
-    driver: local
-  postfix_data:
     driver: local
