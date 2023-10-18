@@ -1,5 +1,3 @@
-server_host = openldap
-server_port = 389
 search_base = ou=users,dc=openmrs,dc=org
 bind_dn = cn=admin,dc=openmrs,dc=org
 query_filter = (&(objectClass=inetOrgPerson)(uid=%u))
