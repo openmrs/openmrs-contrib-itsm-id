@@ -43,10 +43,18 @@ RUN keytool -genkeypair -storepass password -storetype PKCS12 -keyalg RSA -keysi
 
 RUN /opt/keycloak/bin/kc.sh build
 
+FROM registry.access.redhat.com/ubi9 AS ubi-micro-build
+RUN mkdir -p /mnt/rootfs
+RUN dnf install --installroot /mnt/rootfs curl --releasever 9 --setopt install_weak_deps=false --nodocs -y && \
+    dnf --installroot /mnt/rootfs clean all && \
+    rpm --root /mnt/rootfs -e --nodeps setup
+
 FROM quay.io/keycloak/keycloak:22.0
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
-#COPY ./realm-export.json /opt/keycloak/data/import/
+COPY --from=ubi-micro-build /mnt/rootfs /
+
+COPY ./realm-export.json /opt/keycloak/data/import/
 USER 1001
 
-CMD ["start", "--optimized", "--import-realm"]
+CMD ["start", "--optimized", "--import-realm", "--http-enabled true"]

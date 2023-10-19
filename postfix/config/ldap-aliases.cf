@@ -1,3 +1,7 @@
+bind_pw = $LDAP_BIND_PASSWORD
+server_host = $LDAP_HOST
+server_port = $LDAP_PORT
+
 search_base = ou=users,dc=openmrs,dc=org
 bind_dn = cn=admin,dc=openmrs,dc=org
 query_filter = (&(objectClass=inetOrgPerson)(uid=%u))

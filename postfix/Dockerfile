@@ -1,6 +1,6 @@
 FROM alpine:3.18
 
-RUN apk update && apk add postfix postfix-ldap
+RUN apk update && apk add postfix postfix-ldap envsubst && apk cache clean
 
 COPY config/* /etc/postfix/
 

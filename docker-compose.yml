@@ -6,11 +6,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-keycloak}
-      POSTGRES_USER: ${POSTGRES_USER:-keycloak}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Postgres123}
+    healthcheck:
+      test: "pg_isready -U postgres"
   keycloak:
     build:
       context: keycloak
@@ -18,30 +18,29 @@ services:
     environment:
       - KC_HOSTNAME=${HOSTNAME:-localhost}
       - KC_DB=postgres
-      - KC_DB_URL_DATABASE=${POSTGRES_DB:-keycloak}
+      - KC_DB_URL_DATABASE=${POSTGRES_DB:-postgres}
       - KC_DB_URL_HOST=postgres
       - KC_DB_URL_PORT=5432
-      - KC_DB_USERNAME=${POSTGRES_USER:-keycloak}
-      - KC_DB_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - KC_DB_USERNAME=${POSTGRES_USER:-postgres}
+      - KC_DB_PASSWORD=${POSTGRES_PASSWORD:-Postgres123}
       - KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-admin}
-      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-password}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD:-Admin123}
       # Use when behind load balancer with SSL
       # - KC_PROXY=edge
-      # - PROXY_ADDRESS_FORWARDING=true
     ports:
       - "8443:8443"
       # Use when behind load balancer with SSL
       #- "8080:8080"
     depends_on:
       - postgres
+    healthcheck:
+      test: curl --head -fsS http://localhost:8080/health/live || exit 1
   postfix:
-    container_name: postfix
     build:
       context: postfix
       dockerfile: Dockerfile
-    ports:
-      - "25:25"
     environment:
+      - POSTFIX_HOSTNAME=${POSTFIX_HOSTNAME:-localhost}
       - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USERNAME=${SMTP_USERNAME:-username}
