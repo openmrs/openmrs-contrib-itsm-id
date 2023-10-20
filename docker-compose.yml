@@ -41,7 +41,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - POSTFIX_HOSTNAME=${POSTFIX_HOSTNAME:-localhost}
-      - POSTFIX_MYNETWORKS=${POSTFIX_MYNETWORKS:-172.17.0.0/24} 
+      - POSTFIX_MYNETWORKS=${POSTFIX_MYNETWORKS:-172.17.0.0/24}
       - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USERNAME=${SMTP_USERNAME:-username}
