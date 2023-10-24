@@ -39,9 +39,15 @@ services:
     build:
       context: postfix
       dockerfile: Dockerfile
+    ports:
+      - "225:25"
     environment:
       - POSTFIX_HOSTNAME=${POSTFIX_HOSTNAME:-localhost}
       - POSTFIX_MYNETWORKS=${POSTFIX_MYNETWORKS:-172.17.0.0/24}
+      - POSTFIX_USERNAME=${POSTFIX_USERNAME:-username}
+      - POSTFIX_PASSWORD=${POSTFIX_PASSWORD:-password}
+      - POSTFIX_TLS_CRT_FILENAME=${POSTFIX_SSL_CERT:-fullchain.pem}
+      - POSTFIX_TLS_KEY_FILENAME=${POSTFIX_SSL_CERT_KEY:-privkey.pem}
       - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USERNAME=${SMTP_USERNAME:-username}

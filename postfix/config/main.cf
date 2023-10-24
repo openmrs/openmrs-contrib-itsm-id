@@ -22,23 +22,18 @@ smtpd_sasl_security_options = noanonymous
 smtpd_sasl_local_domain = $myhostname
 
 # TLS Configuration
-smtpd_tls_security_level = may
-smtpd_tls_cert_file = /etc/ssl/certs/ssl-cert-snakeoil.pem
-smtpd_tls_key_file = /etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_tls_security_level = encrypt
+smtpd_tls_cert_file = /etc/ssl/certs/$POSTFIX_TLS_CRT_FILENAME
+smtpd_tls_key_file = /etc/ssl/certs/$POSTFIX_TLS_KEY_FILENAME
 smtpd_tls_received_header = yes
 smtpd_tls_session_cache_timeout = 3600s
 tls_random_source = dev:/dev/urandom
 
-# Enable SMTP over TLS encryption
-smtp_tls_security_level = may
-smtp_tls_loglevel = 1
-smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
-
 # Restrict which clients can connect to this mail server
 smtpd_client_restrictions =
     permit_mynetworks,
-    reject_unknown_client,
-    permit
+    permit_sasl_authenticated,
+    reject
 
 smtpd_recipient_restrictions = permit_mynetworks, reject_unauth_destination
 
@@ -61,5 +56,10 @@ smtp_use_tls = yes
 smtp_sasl_auth_enable = yes
 smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
 smtp_sasl_security_options = noanonymous
+
+# Enable SMTP over TLS encryption
+smtp_tls_security_level = encrypt
+smtp_tls_loglevel = 1
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 
 alias_maps = ldap:/etc/postfix/ldap-aliases.cf
