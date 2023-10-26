@@ -54,7 +54,6 @@ COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
 COPY --from=ubi-micro-build /mnt/rootfs /
 
-COPY ./realm-export.json /opt/keycloak/data/import/
 USER 1001
 
 CMD ["start", "--optimized", "--import-realm", "--http-enabled true"]
