@@ -1,4 +1,5 @@
 # Basic Postfix Configuration
+compatibility_level = 3.6
 
 # Set the hostname and domain
 myhostname = $POSTFIX_MYHOSTNAME
@@ -45,7 +46,7 @@ virtual_mailbox_base = /var/mail/vhosts
 # Enable virtual delivery
 # virtual_transport = lmtp:unix:private/dovecot-lmtp
 
-maillog_file = /var/log/mail.log
+maillog_file=/dev/stdout
 
 debug_peer_list = localhost
 debug_peer_level = 2
