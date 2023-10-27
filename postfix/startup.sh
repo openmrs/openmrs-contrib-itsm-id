@@ -10,6 +10,7 @@ echo "pwcheck_method: auxprop
 auxprop_plugin: sasldb
 mech_list: PLAIN LOGIN CRAM-MD5 DIGEST-MD5 NTLM" > /etc/sasl2/smtpd.conf
 echo "$POSTFIX_PASSWORD" | saslpasswd2 -c -p -u "$POSTFIX_HOSTNAME" "$POSTFIX_USERNAME"
+chmod 644 /etc/sasl2/sasldb2
 
 echo "Adding OUTGOING SASL authentication config"
 echo "[${SMTP_SERVER}]:${SMTP_PORT} ${SMTP_USERNAME}:${SMTP_PASSWORD}" > /etc/postfix/sasl_passwd
