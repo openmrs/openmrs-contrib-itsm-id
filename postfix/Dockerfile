@@ -1,6 +1,6 @@
 FROM alpine:3.18
 
-RUN apk update && apk add postfix postfix-btree postfix-ldap envsubst cyrus-sasl && apk cache clean
+RUN apk update && apk add postfix postfix-ldap envsubst cyrus-sasl && apk cache clean
 
 COPY ./config /etc/postfix
 

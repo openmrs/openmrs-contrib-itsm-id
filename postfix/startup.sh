@@ -14,7 +14,8 @@ chmod 644 /etc/sasl2/sasldb2
 
 echo "Adding OUTGOING SASL authentication config"
 echo "[${SMTP_SERVER}]:${SMTP_PORT} ${SMTP_USERNAME}:${SMTP_PASSWORD}" > /etc/postfix/sasl_passwd
-postmap /etc/postfix/sasl_passwd
-chmod 600 /etc/postfix/sasl_passwd
+postmap lmdb:/etc/postfix/sasl_passwd
+chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.lmdb
+chmod 600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.lmdb
 
 postfix start-fg
