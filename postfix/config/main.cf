@@ -4,7 +4,6 @@
 myhostname = $POSTFIX_MYHOSTNAME
 mydomain = $POSTFIX_MYDOMAIN
 
-
 # Specify the destinations that are considered local (not forwarded)
 mydestination = $myhostname, localhost.$mydomain, localhost
 
@@ -51,7 +50,6 @@ maillog_file = /var/log/mail.log
 debug_peer_list = localhost
 debug_peer_level = 2
 
-relay_domains = $mydomain # forward mail to my domain and subdomains
 relayhost = [$SMTP_SERVER]:$SMTP_PORT
 smtp_use_tls = yes
 smtp_sasl_auth_enable = yes
