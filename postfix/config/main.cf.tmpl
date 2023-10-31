@@ -15,6 +15,10 @@ mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $POSTFIX_MYNETWORKS
 # Allow all clients
 smtpd_client_restrictions =
 
+# Block relay
+smtpd_relay_restrictions = permit_mynetworks,
+        defer_unauth_destination
+
 maillog_file=/dev/stdout
 
 virtual_alias_domains = $myorigin
