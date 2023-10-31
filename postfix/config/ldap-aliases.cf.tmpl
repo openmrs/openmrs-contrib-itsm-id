@@ -1,8 +1,8 @@
-bind_pw = $LDAP_BIND_PASSWORD
 server_host = $LDAP_HOST
 server_port = $LDAP_PORT
+bind_pw = $LDAP_BIND_PASSWORD
+bind_dn = cn=$LDAP_USER,dc=openmrs,dc=org
 
 search_base = ou=users,dc=openmrs,dc=org
-bind_dn = cn=$LDAP_USER,dc=openmrs,dc=org
 query_filter = (&(objectClass=inetOrgPerson)(uid=%u))
 result_attribute = mail
