@@ -12,41 +12,10 @@ mydestination =
 # Define trusted networks
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $POSTFIX_MYNETWORKS
 
-# Set the default message size limit
-message_size_limit = 10485760
-
-# Enable SASL authentication
-smtpd_sasl_auth_enable = yes
-smtpd_sasl_type = cyrus
-smtpd_sasl_path = smtpd
-smtpd_sasl_security_options = noanonymous
-smtpd_sasl_local_domain = $myhostname
-
-# TLS Configuration
-smtpd_tls_security_level = encrypt
-smtpd_tls_cert_file = /etc/ssl/certs/$POSTFIX_TLS_CRT_FILENAME
-smtpd_tls_key_file = /etc/ssl/certs/$POSTFIX_TLS_KEY_FILENAME
-smtpd_tls_received_header = yes
-smtpd_tls_session_cache_timeout = 3600s
-tls_random_source = dev:/dev/urandom
-
 # Allow all clients
 smtpd_client_restrictions =
 
-smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, defer_unauth_destination
-
 maillog_file=/dev/stdout
-
-#relayhost = [$SMTP_SERVER]:$SMTP_PORT
-#smtp_use_tls = yes
-#smtp_sasl_auth_enable = yes
-#smtp_sasl_password_maps = lmdb:/etc/postfix/sasl_passwd
-#smtp_sasl_security_options = noanonymous
-
-# Enable SMTP over TLS encryption
-#smtp_tls_security_level = encrypt
-#smtp_tls_loglevel = 1
-#smtp_tls_session_cache_database = lmdb:${data_directory}/smtp_scache
 
 virtual_alias_domains = $myorigin
 virtual_alias_maps = ldap:/etc/postfix/ldap-aliases.cf
