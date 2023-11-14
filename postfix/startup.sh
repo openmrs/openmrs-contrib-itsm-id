@@ -5,8 +5,6 @@ envsubst '$POSTFIX_MYHOSTNAME,$POSTFIX_MYDOMAIN,$POSTFIX_MYNETWORKS,$SMTP_SERVER
 envsubst '$LDAP_USER,$LDAP_BIND_PASSWORD,$LDAP_HOST,$LDAP_PORT' < /etc/postfix/ldap-aliases.cf.tmpl > /etc/postfix/ldap-aliases.cf
 newaliases
 
-postmap lmdb:/etc/postfix/rbl_override
-
 echo "Adding OUTGOING SASL authentication config"
 echo "[${SMTP_SERVER}]:${SMTP_PORT} ${SMTP_USERNAME}:${SMTP_PASSWORD}" > /etc/postfix/sasl_passwd
 postmap lmdb:/etc/postfix/sasl_passwd
