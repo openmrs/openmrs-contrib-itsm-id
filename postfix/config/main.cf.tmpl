@@ -13,11 +13,13 @@ mydestination =
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $POSTFIX_MYNETWORKS
 
 # Allow all clients
-# TODO: restrict to Atlassian's smtps from
+# Restrict to mynetworks and Atlassian's smtps from
 # https://support.atlassian.com/organization-administration/docs/ip-addresses-and-domains-for-atlassian-cloud-products/
-smtpd_client_restrictions =
+smtpd_client_restrictions = permit_mynetworks,
+        check_client_access lmdb:/etc/postfix/rbl_override
+        reject
 
-# Block relay
+# Allow relay from mynetworks only
 smtpd_relay_restrictions = permit_mynetworks,
         defer_unauth_destination
 
@@ -25,3 +27,14 @@ maillog_file=/dev/stdout
 
 virtual_alias_domains = $myorigin
 virtual_alias_maps = ldap:/etc/postfix/ldap-aliases.cf
+
+relayhost = [$SMTP_SERVER]:$SMTP_PORT
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = lmdb:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+
+# Enable SMTP over TLS encryption
+smtp_tls_security_level = encrypt
+smtp_tls_loglevel = 1
+smtp_tls_session_cache_database = lmdb:${data_directory}/smtp_scache
