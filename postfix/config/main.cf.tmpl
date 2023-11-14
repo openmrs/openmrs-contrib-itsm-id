@@ -16,7 +16,7 @@ mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $POSTFIX_MYNETWORKS
 # Restrict to mynetworks and Atlassian's smtps from
 # https://support.atlassian.com/organization-administration/docs/ip-addresses-and-domains-for-atlassian-cloud-products/
 smtpd_client_restrictions = permit_mynetworks,
-        check_client_access cidr:/etc/postfix/client.cidr
+        check_client_access cidr:/etc/postfix/clients.cidr
         reject
 
 # Allow relay from mynetworks only
