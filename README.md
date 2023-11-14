@@ -122,12 +122,6 @@ more about Keycloak themes here: [Keycloak Themes](https://www.keycloak.org/docs
 
 #### **Add a custom announcement**
 
-To add a custom announcement, you can edit the `template.ftl` file.
-
-ex:
-
-```
-<@alert.kw color="warning">This is a custom message!</@alert.kw>
-```
+To add a custom announcement to the login page, you can add a value to the `HTML Display name` field of the Realm settings. (`Realm Settings > General > HTML Display name`)
 
 ![Preview](docs/announcement.jpeg)

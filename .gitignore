@@ -3,3 +3,7 @@ interceptor/node_modules/*
 interceptor/build/*
 postfix/config/sasl_passwd
 keycloak/keycloak-extension/target/*
+<<<<<<< HEAD
+=======
+**/target/*
+>>>>>>> e688a5c (Whitelist Account page)
