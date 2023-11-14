@@ -1040,8 +1040,8 @@
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
   },
   "smtpServer": {},
-  "loginTheme": "keywind",
-  "accountTheme": "",
+  "loginTheme": "openmrs",
+  "accountTheme": "openmrs",
   "adminTheme": "",
   "emailTheme": "",
   "eventsEnabled": false,

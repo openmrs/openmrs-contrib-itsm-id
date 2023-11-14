@@ -2,6 +2,7 @@
 
 # build
 out/
+keycloak/theme/theme/openmrs/login/resources/dist
 
 # dependencies
 node_modules/

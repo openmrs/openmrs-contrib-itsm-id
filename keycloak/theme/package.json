@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/package",
-  "name": "keywind",
+  "name": "openmrs_keycloak_theme",
   "scripts": {
     "build": "tsc && vite build",
     "build:jar": "vite-node scripts/build",

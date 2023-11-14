@@ -3,3 +3,8 @@ interceptor/node_modules/*
 interceptor/build/*
 postfix/config/sasl_passwd
 keycloak/keycloak-extension/target/*
+
+**/target/*
+keycloak/theme/theme/openmrs/login/resources/dist/*
+
+.DS_Store

@@ -1,8 +1,8 @@
 {
   "themes": [
     {
-      "name": "keywind",
-      "types": ["login"]
+      "name": "openmrs",
+      "types": ["login", "account"]
     }
   ]
 }
