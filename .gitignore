@@ -6,3 +6,5 @@ keycloak/keycloak-extension/target/*
 
 **/target/*
 keycloak/theme/theme/openmrs/login/resources/dist/*
+
+.DS_Store
