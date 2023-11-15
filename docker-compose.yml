@@ -45,12 +45,11 @@ services:
       - POSTFIX_MYHOSTNAME=${POSTFIX_MYHOSTNAME:-localhost}
       - POSTFIX_MYDOMAIN=${POSTFIX_MYDOMAIN:-localhost}
       - POSTFIX_MYNETWORKS=${POSTFIX_MYNETWORKS:-172.17.0.0/24}
-      - POSTFIX_USERNAME=${POSTFIX_USERNAME:-username}
-      - POSTFIX_PASSWORD=${POSTFIX_PASSWORD:-password}
       - SMTP_SERVER=${SMTP_SERVER:-smtp.gmail.com}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_USERNAME=${SMTP_USERNAME:-username}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-password}
+      - LDAP_USER=${LDAP_USER:-ldap}
       - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-password}
       - LDAP_HOST=${LDAP_HOST:-openldap}
       - LDAP_PORT=${LDAP_PORT:-389}

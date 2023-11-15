@@ -2,7 +2,7 @@ server_host = $LDAP_HOST
 server_port = $LDAP_PORT
 version = 3
 bind_pw = $LDAP_BIND_PASSWORD
-bind_dn = cn=$LDAP_USER,dc=openmrs,dc=org
+bind_dn = uid=$LDAP_USER,ou=system,dc=openmrs,dc=org
 
 search_base = ou=users,dc=openmrs,dc=org
 query_filter = (&(objectClass=inetOrgPerson)(uid=%u))
