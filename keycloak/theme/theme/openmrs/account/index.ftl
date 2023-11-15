@@ -179,7 +179,7 @@
     if (!keycloak.authenticated) {
       document.getElementById('landingSignInButton').style.display = 'inline'
       document.getElementById('landingSignInLink').style.display = 'inline'
-      document.getElementById('joinButton').style.display = 'inline'
+      document.getElementById('joinOrSignSection').style.display = 'inline'
     } else {
       document.getElementById('actions').style.display = 'inline'
       document.getElementById('landingSignOutButton').style.display = 'inline'
@@ -308,9 +308,15 @@
               all of the tools and services listed on the links at the top of this page.
               <a href="https://wiki.openmrs.org/display/ISM/OpenMRS+ID">Read more on our Wiki.</a>
             </p>
-            <a id="joinButton" onclick="keycloak.register();" style="display: none" class="pf-c-button pf-m-primary">
-              Join the community
-            </a>
+            <div id="joinOrSignSection" style="display: none">
+              <a onclick="keycloak.register();" class="pf-c-button pf-m-primary">
+                Join the community
+              </a>
+              <span style="margin: 0 5px">Or</span>
+              <a onclick="keycloak.login();" class="pf-c-button pf-m-primary">
+                  ${msg("doLogIn")}
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -355,7 +361,8 @@
           </div>
         </div>
       </section>
-      <section class="pf-c-page__main-section pf-m-limit-width pf-m-light pf-m-shadow-bottom" style=" position: fixed;left: 0;bottom: 0; width: 100%">
+      <section class="pf-c-page__main-section pf-m-limit-width pf-m-light pf-m-shadow-bottom"
+               style=" position: fixed;left: 0;bottom: 0; width: 100%">
         <div class="pf-c-page__main-body">
           <div class="pf-c-content" id="landingWelcomeMessage">
             <h1>Need help?</h1>
