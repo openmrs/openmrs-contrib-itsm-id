@@ -19,7 +19,7 @@ script=""
 showAnotherWayIfPresent=true
 >
     <#assign cardHeader>
-        <#if realm.displayNameHtml != "master" && realm.displayNameHtml != "openmrs" && realm.displayNameHtml != "Openmrs ID"  >
+        <#if realm.displayNameHtml != "master" && realm.displayNameHtml != "openmrs" && realm.displayNameHtml != "OpenMRS ID"  >
             <@alert.kw color="warning">${kcSanitize(msg(realm.displayNameHtml!""))?no_esc}</@alert.kw>
         </#if>
         <@logo.kw>
