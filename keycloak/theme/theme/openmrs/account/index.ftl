@@ -284,7 +284,7 @@
 
               <li id="landingSignInLink" role="none" style="display:none">
                 <a onclick="keycloak.login();" role="menuitem" tabindex="0" aria-disabled="false"
-                   class="pf-c-dropdown__menu-item">${msg("doLogIn")}</a>
+                   class="pf-c-dropdown__menu-item">${msg("doSignIn")}</a>
               </li>
               <li id="landingSignOutLink" role="none" style="display:none">
                 <a onclick="keycloak.logout();" role="menuitem" tabindex="0" aria-disabled="false"
@@ -310,11 +310,11 @@
             </p>
             <div id="joinOrSignSection" style="display: none">
               <a onclick="keycloak.register();" class="pf-c-button pf-m-primary">
-                Join the community
+                ${msg("joinCommunity")}
               </a>
               <span style="margin: 0 5px">Or</span>
               <a onclick="keycloak.login();" class="pf-c-button pf-m-primary">
-                  ${msg("doLogIn")}
+                  ${msg("doSignIn")}
               </a>
             </div>
           </div>
