@@ -56,4 +56,4 @@ COPY --from=ubi-micro-build /mnt/rootfs /
 
 USER 1001
 
-CMD ["start", "--optimized", "--import-realm", "--http-enabled true"]
+CMD ["start", "--optimized", "--import-realm", "--http-enabled true", "--spi-theme-welcome-theme=openmrs"]

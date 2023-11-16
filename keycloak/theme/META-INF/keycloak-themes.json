@@ -2,7 +2,7 @@
   "themes": [
     {
       "name": "openmrs",
-      "types": ["login", "account"]
+      "types": ["login", "account", "welcome"]
     }
   ]
 }
