@@ -4,7 +4,6 @@ compatibility_level = 3.6
 # Set the hostname and domain
 myhostname = $POSTFIX_MYHOSTNAME
 mydomain = $POSTFIX_MYDOMAIN
-myorigin = $POSTFIX_MYDOMAIN
 
 # No local delivery
 mydestination =
@@ -25,7 +24,7 @@ smtpd_relay_restrictions = permit_mynetworks,
 
 maillog_file=/dev/stdout
 
-virtual_alias_domains = $myorigin
+virtual_alias_domains = $mydomain
 virtual_alias_maps = ldap:/etc/postfix/ldap-aliases.cf
 
 relayhost = [$SMTP_SERVER]:$SMTP_PORT
