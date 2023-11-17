@@ -20,6 +20,7 @@ smtpd_client_restrictions = permit_mynetworks,
 
 # Allow relay from mynetworks only
 smtpd_relay_restrictions = permit_mynetworks,
+        check_client_access cidr:/etc/postfix/clients.cidr
         defer_unauth_destination
 
 maillog_file=/dev/stdout
