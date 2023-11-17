@@ -6,7 +6,7 @@ myhostname = $POSTFIX_MYHOSTNAME
 mydomain = $POSTFIX_MYDOMAIN
 
 # No local delivery
-mydestination =
+mydestination = $mydomain
 
 # Define trusted networks
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $POSTFIX_MYNETWORKS
@@ -24,8 +24,7 @@ smtpd_relay_restrictions = permit_mynetworks,
 
 maillog_file=/dev/stdout
 
-virtual_alias_domains = $mydomain
-virtual_alias_maps = ldap:/etc/postfix/ldap-aliases.cf
+alias_maps = ldap:/etc/postfix/ldap-aliases.cf
 
 relayhost = [$SMTP_SERVER]:$SMTP_PORT
 smtp_use_tls = yes
