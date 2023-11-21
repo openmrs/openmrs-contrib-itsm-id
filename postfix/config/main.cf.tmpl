@@ -27,11 +27,11 @@ maillog_file=/dev/stdout
 
 alias_maps = ldap:/etc/postfix/ldap-aliases.cf
 
-#relayhost = [$SMTP_SERVER]:$SMTP_PORT
-#smtp_use_tls = yes
-#smtp_sasl_auth_enable = yes
-#smtp_sasl_password_maps = lmdb:/etc/postfix/sasl_passwd
-#smtp_sasl_security_options = noanonymous
+relayhost = [$SMTP_SERVER]:$SMTP_PORT
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = lmdb:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
 
 # Enable SMTP over TLS encryption
 smtp_tls_security_level = may
