@@ -14,18 +14,33 @@ mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $POSTFIX_MYNETWORKS
 # Allow all clients
 # Restrict to mynetworks and Atlassian's smtps from
 # https://support.atlassian.com/organization-administration/docs/ip-addresses-and-domains-for-atlassian-cloud-products/
-smtpd_client_restrictions = permit_mynetworks,
+smtpd_client_restrictions = permit_mynetworks, permit_sasl_authenticated,
         check_client_access cidr:/etc/postfix/clients.cidr,
         reject
 
 # Allow relay from mynetworks only
-smtpd_relay_restrictions = permit_mynetworks,
+smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated,
         check_client_access cidr:/etc/postfix/clients.cidr,
         defer_unauth_destination
 
 maillog_file=/dev/stdout
 
 alias_maps = ldap:/etc/postfix/ldap-aliases.cf
+
+# Enable SASL authentication
+smtpd_sasl_auth_enable = yes
+smtpd_sasl_type = cyrus
+smtpd_sasl_path = smtpd
+smtpd_sasl_security_options = noanonymous, noplaintext
+smtpd_sasl_local_domain = $myhostname
+
+# TLS Configuration
+smtpd_tls_security_level = encrypt
+smtpd_tls_cert_file = /etc/ssl/certs/$POSTFIX_TLS_CRT_FILENAME
+smtpd_tls_key_file = /etc/ssl/certs/$POSTFIX_TLS_KEY_FILENAME
+smtpd_tls_received_header = yes
+smtpd_tls_session_cache_timeout = 3600s
+tls_random_source = dev:/dev/urandom
 
 relayhost = [$SMTP_SERVER]:$SMTP_PORT
 smtp_use_tls = yes
