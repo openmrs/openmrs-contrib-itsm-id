@@ -34,6 +34,6 @@ smtp_sasl_password_maps = lmdb:/etc/postfix/sasl_passwd
 smtp_sasl_security_options = noanonymous
 
 # Enable SMTP over TLS encryption
-smtp_tls_security_level = may
+smtp_tls_security_level = encrypt
 smtp_tls_loglevel = 1
 smtp_tls_session_cache_database = lmdb:${data_directory}/smtp_scache
