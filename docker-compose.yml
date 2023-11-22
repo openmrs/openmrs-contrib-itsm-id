@@ -41,6 +41,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "225:25"
+    healthcheck:
+      test: postfix status
     environment:
       - POSTFIX_MYHOSTNAME=${POSTFIX_MYHOSTNAME:-localhost}
       - POSTFIX_MYDOMAIN=${POSTFIX_MYDOMAIN:-localhost}
