@@ -25,9 +25,8 @@ RUN npm run build:jar
 # Stage 3: Build the Keycloak including the theme and the extension
 FROM quay.io/keycloak/keycloak:22.0 as builder
 
-# Enable health and metrics support
+# Enable health support
 ENV KC_HEALTH_ENABLED=true
-ENV KC_METRICS_ENABLED=true
 
 # Configure the database vendor
 ENV KC_DB=postgres
