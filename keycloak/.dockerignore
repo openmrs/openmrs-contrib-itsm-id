@@ -1,0 +1,9 @@
+# build
+theme/out/
+theme/theme/openmrs/login/resources/dist
+
+# dependencies
+theme/node_modules/
+
+# misc
+.DS_Store

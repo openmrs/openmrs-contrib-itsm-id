@@ -8,3 +8,4 @@ keycloak/keycloak-extension/target/*
 keycloak/theme/theme/openmrs/login/resources/dist/*
 
 .DS_Store
+.env

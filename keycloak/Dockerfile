@@ -1,5 +1,5 @@
 # Stage 1: Build the Extension
-FROM maven:3.8.4 AS extension-builder
+FROM maven:3.9.6 AS extension-builder
 
 WORKDIR /app
 
@@ -10,20 +10,21 @@ COPY keycloak-extension/src ./src
 RUN mvn clean install -DskipTests
 
 # Stage 2: Build the TypeScript application
-FROM node:14 AS theme-builder
+FROM node:22-slim AS theme-builder
 
 WORKDIR /theme
 
-COPY theme/package.json theme/package-lock.json ./
-RUN npm install
-
 COPY theme ./
 
-RUN npm run build
-RUN npm run build:jar
+RUN npm install -g corepack@latest
+RUN corepack enable
+RUN pnpm install --frozen-lockfile
+
+RUN pnpm run build
+RUN pnpm run build:jar
 
 # Stage 3: Build the Keycloak including the theme and the extension
-FROM quay.io/keycloak/keycloak:22.0 as builder
+FROM quay.io/keycloak/keycloak:26.1.1 as builder
 
 # Enable health support
 ENV KC_HEALTH_ENABLED=true
@@ -48,9 +49,9 @@ RUN dnf install --installroot /mnt/rootfs curl --releasever 9 --setopt install_w
     dnf --installroot /mnt/rootfs clean all && \
     rpm --root /mnt/rootfs -e --nodeps setup
 
-FROM quay.io/keycloak/keycloak:22.0
-COPY --from=builder /opt/keycloak/ /opt/keycloak/
+FROM quay.io/keycloak/keycloak:26.1.1
 
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY --from=ubi-micro-build /mnt/rootfs /
 
 USER 1001

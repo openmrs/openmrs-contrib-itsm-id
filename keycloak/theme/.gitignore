@@ -1,8 +1,6 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # build
 out/
-keycloak/theme/theme/openmrs/login/resources/dist
+theme/openmrs/login/resources/dist
 
 # dependencies
 node_modules/
