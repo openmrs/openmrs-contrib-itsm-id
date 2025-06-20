@@ -19,4 +19,11 @@ postmap lmdb:/etc/postfix/sasl_passwd
 chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.lmdb
 chmod 600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.lmdb
 
+echo "Starting Atlassian IP updater in background"
+python3 /usr/local/bin/ip_updater.py > /var/log/ip_updater.log 2>&1 &
+
+echo "Starting health check service in background"
+python3 /usr/local/bin/health_check.py > /var/log/health_check.log 2>&1 &
+
+echo "Starting Postfix in foreground"
 postfix start-fg

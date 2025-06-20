@@ -41,6 +41,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "225:25"
+      - "8090:8090"  # Health check port
     healthcheck:
       test: postfix status
     environment:
@@ -59,6 +60,12 @@ services:
       - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-password}
       - LDAP_HOST=${LDAP_HOST:-openldap}
       - LDAP_PORT=${LDAP_PORT:-389}
+      # IP Updater Configuration
+      - ATLASSIAN_IP_JSON_URL=${ATLASSIAN_IP_JSON_URL:-https://ip-ranges.atlassian.com/}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - IP_CHECK_INTERVAL=${IP_CHECK_INTERVAL:-3600}
+      # Health Check Service
+      - HEALTH_PORT=${HEALTH_PORT:-8090}
 volumes:
   postgres_data:
     driver: local
