@@ -3,6 +3,7 @@
 Atlassian IP Whitelist Updater
 
 Automatically updates Postfix client whitelist with current Atlassian email server IPs.
+Sends alerts and metrics to DataDog for monitoring and alerting.
 """
 
 import os
@@ -26,12 +27,18 @@ class AtlassianIPUpdater:
     def __init__(self):
         # Configuration
         self.atlassian_url = os.getenv('ATLASSIAN_IP_JSON_URL', 'https://ip-ranges.atlassian.com/')
-        self.slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL')
+        self.datadog_api_key = os.getenv('DATADOG_API_KEY')
+        self.datadog_app_key = os.getenv('DATADOG_APP_KEY')
+        self.datadog_site = os.getenv('DATADOG_SITE', 'datadoghq.com')  # Default to US site
         self.check_interval = int(os.getenv('IP_CHECK_INTERVAL', '3600'))
+        self.metric_interval = int(os.getenv('METRIC_REPORT_INTERVAL', '300'))  # 5 minutes default
         
         # File paths
         self.cidr_file_path = '/etc/postfix/clients.cidr'
         self.state_file = '/tmp/atlassian_state.json'
+        
+        # Tracking for metric reporting
+        self.last_metric_time = 0
     
     def load_state(self) -> Dict:
         """Load previous state from file"""
@@ -51,27 +58,79 @@ class AtlassianIPUpdater:
         except Exception as e:
             logger.error(f"Could not save state: {e}")
     
-    def send_slack_notification(self, message: str, severity: str = 'info') -> None:
-        """Send notification to Slack if configured"""
-        if not self.slack_webhook_url:
+    def send_datadog_event(self, title: str, text: str, alert_type: str = 'info', tags: Optional[List[str]] = None) -> None:
+        """Send event to DataDog if configured"""
+        if not self.datadog_api_key:
+            logger.debug("DataDog API key not configured, skipping notification")
             return
             
-        colors = {'success': '#00ff00', 'warning': '#ffaa00', 'error': '#ff0000', 'info': '#0099cc'}
+        if tags is None:
+            tags = ['service:postfix', 'component:ip-updater']
+        
+        # DataDog Events API endpoint
+        url = f"https://api.{self.datadog_site}/api/v1/events"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'DD-API-KEY': self.datadog_api_key
+        }
+        
+        # Add app key if available (required for some operations)
+        if self.datadog_app_key:
+            headers['DD-APPLICATION-KEY'] = self.datadog_app_key
         
         payload = {
-            "attachments": [{
-                "color": colors.get(severity, '#0099cc'),
-                "title": "Atlassian IP Whitelist Update",
-                "text": message,
-                "ts": int(datetime.now().timestamp())
+            "title": title,
+            "text": text,
+            "date_happened": int(datetime.now().timestamp()),
+            "priority": "normal",
+            "tags": tags,
+            "alert_type": alert_type,  # info, error, warning, success
+            "source_type_name": "postfix-ip-updater"
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            response.raise_for_status()
+            logger.info(f"DataDog event sent: {title}")
+        except Exception as e:
+            logger.error(f"Failed to send DataDog event: {e}")
+
+    def send_datadog_metric(self, metric_name: str, value: float, tags: Optional[List[str]] = None) -> None:
+        """Send metric to DataDog if configured"""
+        if not self.datadog_api_key:
+            return
+            
+        if tags is None:
+            tags = ['service:postfix', 'component:ip-updater']
+        
+        # DataDog Metrics API endpoint
+        url = f"https://api.{self.datadog_site}/api/v1/series"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'DD-API-KEY': self.datadog_api_key
+        }
+        
+        # Add app key if available
+        if self.datadog_app_key:
+            headers['DD-APPLICATION-KEY'] = self.datadog_app_key
+        
+        payload = {
+            "series": [{
+                "metric": metric_name,
+                "points": [[int(datetime.now().timestamp()), value]],
+                "type": "gauge",
+                "tags": tags
             }]
         }
         
         try:
-            requests.post(self.slack_webhook_url, json=payload, timeout=10)
-            logger.info(f"Slack notification sent: {message}")
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            response.raise_for_status()
+            logger.debug(f"DataDog metric sent: {metric_name}={value}")
         except Exception as e:
-            logger.error(f"Failed to send Slack notification: {e}")
+            logger.error(f"Failed to send DataDog metric: {e}")
 
     def fetch_atlassian_data(self, last_hash: Optional[str] = None) -> Optional[Dict]:
         """Fetch Atlassian IP data and check if it has changed"""
@@ -173,6 +232,31 @@ class AtlassianIPUpdater:
             logger.error(f"Failed to reload Postfix: {e}")
             return False
     
+    def send_health_metrics(self) -> None:
+        """Send health metrics based on current state"""
+        if not self.datadog_api_key:
+            return
+            
+        # Load current state
+        state = self.load_state()
+        
+        # Send current IP count from state (or 0 if not available)
+        ip_count = state.get('ip_count', 0)
+        self.send_datadog_metric("atlassian.ip_updater.ip_count", ip_count)
+        
+        # Send health check metric to show the service is running
+        self.send_datadog_metric("atlassian.ip_updater.postfix_reload_success", 1)
+        
+        # Update last metric time
+        self.last_metric_time = time.time()
+        
+        logger.debug(f"Health metrics sent to DataDog (IP count: {ip_count})")
+
+    def should_send_metrics(self) -> bool:
+        """Check if it's time to send metrics"""
+        current_time = time.time()
+        return (current_time - self.last_metric_time) >= self.metric_interval
+
     def update_ips(self) -> bool:
         """Main update process"""
         logger.info("Checking for Atlassian IP updates...")
@@ -184,18 +268,30 @@ class AtlassianIPUpdater:
         # Fetch data
         data = self.fetch_atlassian_data(last_hash)
         if data is None:
-            return True  # No update needed
+            # No update needed, but send current metrics for monitoring
+            ip_count = state.get('ip_count', 0)
+            self.send_datadog_metric("atlassian.ip_updater.ip_count", ip_count)
+            self.send_datadog_metric("atlassian.ip_updater.postfix_reload_success", 1)  # Assume healthy if no update needed
+            return True
         
         # Extract IPs
         email_ips = self.extract_email_ips(data)
         if not email_ips:
             logger.error("No email IPs found")
-            self.send_slack_notification("No email IPs found in Atlassian data", 'error')
+            self.send_datadog_event(
+                "Atlassian IP Update Error", 
+                "No email IPs found in Atlassian data", 
+                'error'
+            )
             return False
         
         # Update file
         if not self.update_cidr_file(email_ips):
-            self.send_slack_notification("Failed to update CIDR file", 'error')
+            self.send_datadog_event(
+                "Atlassian IP Update Error", 
+                "Failed to update CIDR file", 
+                'error'
+            )
             return False
         
         # Reload Postfix
@@ -210,10 +306,17 @@ class AtlassianIPUpdater:
         # Send notification
         status = "✅" if postfix_success else "⚠️"
         postfix_msg = "and reloaded Postfix" if postfix_success else "but failed to reload Postfix"
-        self.send_slack_notification(
+        alert_type = 'success' if postfix_success else 'warning'
+        
+        self.send_datadog_event(
+            "Atlassian IP Whitelist Updated",
             f"{status} Updated email whitelist with {len(email_ips)} IP ranges {postfix_msg}",
-            'success' if postfix_success else 'warning'
+            alert_type
         )
+        
+        # Send metrics to DataDog
+        self.send_datadog_metric("atlassian.ip_updater.ip_count", len(email_ips))
+        self.send_datadog_metric("atlassian.ip_updater.postfix_reload_success", 1 if postfix_success else 0)
         
         return postfix_success
     
@@ -221,21 +324,42 @@ class AtlassianIPUpdater:
         """Main loop"""
         logger.info("Starting Atlassian IP Updater")
         logger.info(f"Check interval: {self.check_interval} seconds")
+        logger.info(f"Metric report interval: {self.metric_interval} seconds")
         logger.info(f"Atlassian URL: {self.atlassian_url}")
         logger.info(f"CIDR file: {self.cidr_file_path}")
         
         # Send startup notification
-        if self.slack_webhook_url:
-            self.send_slack_notification("IP updater started inside Postfix container", 'info')
+        if self.datadog_api_key:
+            self.send_datadog_event(
+                "IP Updater Started", 
+                "IP updater started inside Postfix container", 
+                'info'
+            )
         
-        # Initial update
+        # Initial update and first metric send
         self.update_ips()
+        self.send_health_metrics()
         
-        # Main loop
+        # Track last IP check time
+        last_ip_check = time.time()
+        
+        # Main loop with 30-second intervals to check both timers
         while True:
             try:
-                time.sleep(self.check_interval)
-                self.update_ips()
+                current_time = time.time()
+                
+                # Check if it's time for IP update
+                if (current_time - last_ip_check) >= self.check_interval:
+                    self.update_ips()
+                    last_ip_check = current_time
+                
+                # Check if it's time for metric reporting (independent of IP checks)
+                elif self.should_send_metrics():
+                    self.send_health_metrics()
+                
+                # Sleep for 30 seconds to avoid busy waiting
+                time.sleep(30)
+                
             except Exception as e:
                 logger.error(f"Error during update: {e}")
 
@@ -247,5 +371,9 @@ if __name__ == "__main__":
         logger.info("IP updater stopped by user")
     except Exception as e:
         logger.error(f"IP updater crashed: {e}")
-        if updater.slack_webhook_url:
-            updater.send_slack_notification(f"IP updater crashed: {e}", 'error')
+        if updater.datadog_api_key:
+            updater.send_datadog_event(
+                "IP Updater Crashed", 
+                f"IP updater crashed: {e}", 
+                'error'
+            )
