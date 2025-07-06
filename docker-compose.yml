@@ -64,9 +64,12 @@ services:
       - LDAP_PORT=${LDAP_PORT:-389}
       # IP Updater Configuration
       - ATLASSIAN_IP_JSON_URL=${ATLASSIAN_IP_JSON_URL:-https://ip-ranges.atlassian.com/}
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - DATADOG_API_KEY=${DATADOG_API_KEY}
+      - DATADOG_APP_KEY=${DATADOG_APP_KEY}
+      - DATADOG_SITE=${DATADOG_SITE:-datadoghq.com}
+      - DATADOG_HOSTNAME=localhost.openmrs.org
       - IP_CHECK_INTERVAL=${IP_CHECK_INTERVAL:-3600}
-      - DATADOG_HOSTNAME=${HOST_HOSTNAME}
+      - METRIC_REPORT_INTERVAL=${METRIC_REPORT_INTERVAL:-300}
       # Health Check Service
       - HEALTH_PORT=${HEALTH_PORT:-8090}
 volumes:
