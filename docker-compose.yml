@@ -39,6 +39,8 @@ services:
     build:
       context: postfix
       dockerfile: Dockerfile
+    volumes:
+      - ip_updater_logs:/var/logs/ip_updater/
     ports:
       - "225:25"
       - "8090:8090"  # Health check port
@@ -64,8 +66,11 @@ services:
       - ATLASSIAN_IP_JSON_URL=${ATLASSIAN_IP_JSON_URL:-https://ip-ranges.atlassian.com/}
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
       - IP_CHECK_INTERVAL=${IP_CHECK_INTERVAL:-3600}
+      - DATADOG_HOSTNAME=${HOST_HOSTNAME}
       # Health Check Service
       - HEALTH_PORT=${HEALTH_PORT:-8090}
 volumes:
   postgres_data:
+    driver: local
+  ip_updater_logs:
     driver: local

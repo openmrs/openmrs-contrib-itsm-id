@@ -21,8 +21,9 @@ This setup will use SAML to connect to Atlassian. You need to add the following 
 This repository contains the following components that are used to run OpenMRS ID:
 
 1. Keycloak extension
-2. Postfix Docker configuration
-3. Keycloak Theme
+2. Keycloak Theme
+3. Postfix Docker configuration
+4. Atlassian IP updater for postfix
 
 ### Keycloak Extension
 
@@ -100,6 +101,14 @@ Choose "OpenMRS Mapper For NameID."
 The extension is built as a `jar` and will be copied to the Keycloak image during the Keycloak image build. Learn more
 about Keycloak extensions [here](a link).
 
+### Keycloak Theme
+
+This theme is to enhace the look and feel of the login and registration process.
+
+This is a custom theme for OpenMRS ID based on the [Keywind](https://github.com/lukin/keywind) theme for Keycloak. Learn
+more about Keycloak themes here: [Keycloak Themes](https://www.keycloak.org/docs/latest/server_development/#_themes).
+![Preview](docs/preview.jpeg)
+
 ### Postfix
 
 The user's email is saved by Atlassian as the virtual email address mentioned above. As a result, all notifications and
@@ -110,15 +119,11 @@ MTA) that routes and delivers email messages.
 Whenever Atlassian receives an email, postfix queries for a user in the LDAP where the username is the username part of
 the received email address. Then, it retrieves the email address of the returned user and forwards the received email.
 
+`IP udpater` script will check Atlassian, and update postfix configuration based on Atlassian's new IPs. In datadog, you can see metrics `atlassian.ip_updater.ip_count` and `atlassian.ip_updater.postfix_reload_success` related to it. HTTP endpoints `/postfix` and `/status` give a bit of insight about it as well
+
 ![Untitled](docs/Untitled.png)
 
-### Keycloak Theme
 
-This theme is to enhace the look and feel of the login and registration process.
-
-This is a custom theme for OpenMRS ID based on the [Keywind](https://github.com/lukin/keywind) theme for Keycloak. Learn
-more about Keycloak themes here: [Keycloak Themes](https://www.keycloak.org/docs/latest/server_development/#_themes).
-![Preview](docs/preview.jpeg)
 
 #### **Add a custom announcement**
 
