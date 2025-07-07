@@ -19,7 +19,7 @@ postmap lmdb:/etc/postfix/sasl_passwd
 chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.lmdb
 chmod 600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.lmdb
 
-mkdir -p /var/logs/ip_updater/
+mkdir -p /var/log/ip_updater/
 
 echo "Starting Atlassian IP updater in background"
 python3 /usr/local/bin/ip_updater.py > /var/log/ip_updater/ip_updater.log 2>&1 &
