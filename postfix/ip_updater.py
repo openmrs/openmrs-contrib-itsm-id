@@ -30,6 +30,8 @@ class AtlassianIPUpdater:
         self.datadog_api_key = os.getenv('DATADOG_API_KEY')
         self.datadog_app_key = os.getenv('DATADOG_APP_KEY')
         self.datadog_site = os.getenv('DATADOG_SITE', 'datadoghq.com')  # Default to US site
+        self.datadog_hostname = os.getenv('DATADOG_HOSTNAME', "unknown")
+
         self.check_interval = int(os.getenv('IP_CHECK_INTERVAL', '3600'))
         self.metric_interval = int(os.getenv('METRIC_REPORT_INTERVAL', '300'))  # 5 minutes default
         
@@ -65,7 +67,7 @@ class AtlassianIPUpdater:
             return
             
         if tags is None:
-            tags = ['service:postfix', 'component:ip-updater']
+            tags = ['service:postfix', 'component:ip-updater', f"host:{self.datadog_hostname}"]
         
         # DataDog Events API endpoint
         url = f"https://api.{self.datadog_site}/api/v1/events"
@@ -102,7 +104,7 @@ class AtlassianIPUpdater:
             return
             
         if tags is None:
-            tags = ['service:postfix', 'component:ip-updater']
+            tags = ['service:postfix', 'component:ip-updater', f"host:{self.datadog_hostname}"]
         
         # DataDog Metrics API endpoint
         url = f"https://api.{self.datadog_site}/api/v1/series"
@@ -128,7 +130,7 @@ class AtlassianIPUpdater:
         try:
             response = requests.post(url, json=payload, headers=headers, timeout=10)
             response.raise_for_status()
-            logger.debug(f"DataDog metric sent: {metric_name}={value}")
+            logger.debug(f"DataDog metric sent: {metric_name}={value}, tags: {tags}")
         except Exception as e:
             logger.error(f"Failed to send DataDog metric: {e}")
 
