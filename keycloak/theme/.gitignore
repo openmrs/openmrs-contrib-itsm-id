@@ -1,6 +1,9 @@
 # build
 out/
 theme/openmrs/login/resources/dist
+theme/openmrs/account/resources/dist
+theme/openmrs/favicon.png
+theme/openmrs/logo.png
 
 # dependencies
 node_modules/

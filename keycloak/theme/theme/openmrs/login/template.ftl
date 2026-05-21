@@ -23,7 +23,7 @@ showAnotherWayIfPresent=true
             <@alert.kw color="warning">${kcSanitize(msg(realm.displayNameHtml!""))?no_esc}</@alert.kw>
         </#if>
         <@logo.kw>
-          <img width="250" class="mx-auto mb-6" src="${url.resourcesPath}/dist/logo.png" alt="OpenMRS" />
+          <img width="250" class="mx-auto mb-6" src="${url.resourcesPath}/img/logo.png" alt="OpenMRS" />
         </@logo.kw>
         <#if !(auth?has_content && auth.showUsername() && !auth.showResetCredentials())>
             <@heading.kw>

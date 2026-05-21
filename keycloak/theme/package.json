@@ -4,25 +4,25 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "build:jar": "vite-node scripts/build",
+    "build:jar": "node scripts/build.ts",
     "dev": "vite build --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "alpinejs": "^3.14.8",
+    "alpinejs": "^3.15.12",
+    "keycloak-js": "^26",
     "rfc4648": "^1.5.4"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/postcss": "^4.3.0",
     "@types/alpinejs": "^3.13.11",
-    "@types/node": "^18.19.75",
-    "archiver": "^7.0.1",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.5.1",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3",
-    "vite": "^5.4.14",
-    "vite-node": "^2.1.9"
+    "@types/node": "^18.19.130",
+    "archiver": "^8.0.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.14"
   },
   "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903"
 }

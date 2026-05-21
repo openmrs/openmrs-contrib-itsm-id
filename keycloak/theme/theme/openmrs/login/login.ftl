@@ -5,7 +5,6 @@
 <#import "components/atoms/form.ftl" as form>
 <#import "components/atoms/input.ftl" as input>
 <#import "components/atoms/link.ftl" as link>
-<#import "components/molecules/identity-provider.ftl" as identityProvider>
 <#import "features/labels/username.ftl" as usernameLabel>
 
 <#assign usernameLabel><@usernameLabel.kw /></#assign>
@@ -78,10 +77,6 @@
           ${msg("doRegister")}
         </@link.kw>
       </div>
-    </#if>
-  <#elseif section="socialProviders">
-    <#if realm.password && social.providers??>
-      <@identityProvider.kw providers=social.providers />
     </#if>
   </#if>
 </@layout.registrationLayout>

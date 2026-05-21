@@ -1,19 +1,19 @@
-import archiver from 'archiver';
-import { createWriteStream, existsSync, mkdirSync } from 'fs';
+import { ZipArchive } from 'archiver';
+import { createWriteStream, existsSync, mkdirSync } from 'node:fs';
 
-import { name } from '../package.json';
+import pkg from '../package.json' with { type: 'json' };
 
 const dir = 'out';
-const file = `${name}.jar`;
+const file = `${pkg.name}.jar`;
 const path = `${dir}/${file}`;
 
 !existsSync(dir) && mkdirSync(dir);
 
-const output = createWriteStream(`${__dirname}/../${path}`);
+const output = createWriteStream(`${import.meta.dirname}/../${path}`);
 
-const archive = archiver('zip');
+const archive = new ZipArchive({ zlib: { level: 9 } });
 
-archive.on('error', (error) => {
+archive.on('error', (error: unknown) => {
   throw error;
 });
 

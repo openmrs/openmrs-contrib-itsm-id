@@ -1,393 +1,391 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>${msg("accountManagementTitle")}</title>
+<!doctype html>
+<html lang="${locale!'en'}" dir="${(localeDir!'ltr')}">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="color-scheme" content="light${darkMode?then(' dark', '')}">
+    <title>${msg("accountManagementTitle")}</title>
 
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-  <meta name="robots" content="noindex, nofollow">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="${resourceUrl}${properties.favIcon!'/public/favicon.png'}">
 
-  <script>
-    <#if properties.developmentMode?has_content && properties.developmentMode == "true">
-    var developmentMode = true
-    var reactRuntime = 'react.development.js'
-    var reactDOMRuntime = 'react-dom.development.js'
-    var reactRouterRuntime = 'react-router-dom.js'
-    <#else>
-    var developmentMode = false
-    var reactRuntime = 'react.production.min.js'
-    var reactDOMRuntime = 'react-dom.production.min.js'
-    var reactRouterRuntime = 'react-router-dom.min.js'
-    </#if>
-    var authUrl = '${authUrl}'
-    var baseUrl = '${baseUrl}'
-    var realm = '${realm.name}'
-    var resourceUrl = '${resourceUrl}'
-    var isReactLoading = false
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "${resourceCommonUrl}/vendor/react/react.production.min.js",
+          "react/jsx-runtime": "${resourceCommonUrl}/vendor/react/react-jsx-runtime.production.min.js",
+          "react-dom": "${resourceCommonUrl}/vendor/react-dom/react-dom.production.min.js"
+        }
+      }
+    </script>
 
-    <#if properties.logo?has_content>
-    var brandImg = resourceUrl + '${properties.logo}'
-    <#else>
-    var brandImg = resourceUrl + '/public/logo.svg'
-    </#if>
-
-    <#if properties.logoUrl?has_content>
-    var brandUrl = '${properties.logoUrl}'
-    <#else>
-    var brandUrl = baseUrl
-    </#if>
-
-    var features = {
-      isRegistrationEmailAsUsername: ${realm.registrationEmailAsUsername?c},
-      isEditUserNameAllowed: ${realm.editUsernameAllowed?c},
-      isInternationalizationEnabled: ${realm.isInternationalizationEnabled()?c},
-      isLinkedAccountsEnabled: ${realm.identityFederationEnabled?c},
-      isMyResourcesEnabled: ${(realm.userManagedAccessAllowed && isAuthorizationEnabled)?c},
-      deleteAccountAllowed: ${deleteAccountAllowed?c},
-      updateEmailFeatureEnabled: ${updateEmailFeatureEnabled?c},
-      updateEmailActionEnabled: ${updateEmailActionEnabled?c},
-      isViewGroupsEnabled: ${isViewGroupsEnabled?c},
-    }
-
-    var availableLocales = []
-    <#list supportedLocales as locale, label>
-    availableLocales.push({locale: '${locale}', label: '${label}'})
-    </#list>
-
-    <#if referrer??>
-    var referrer = '${referrer}'
-    var referrerName = '${referrerName}'
-    var referrerUri = '${referrer_uri}'.replace('&amp;', '&')
+    <#if darkMode>
+      <script type="module" async blocking="render">
+        const DARK_MODE_CLASS = "${properties.kcDarkModeClass!'pf-v5-theme-dark'}";
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        updateDarkMode(mediaQuery.matches);
+        mediaQuery.addEventListener("change", (event) => updateDarkMode(event.matches));
+        function updateDarkMode(isEnabled) {
+          const { classList } = document.documentElement;
+          if (isEnabled) {
+            classList.add(DARK_MODE_CLASS);
+          } else {
+            classList.remove(DARK_MODE_CLASS);
+          }
+        }
+      </script>
     </#if>
 
-    <#if msg??>
-    var locale = '${locale}'
-    <#outputformat "JavaScript">
-    var l18nMsg = JSON.parse('${msgJSON?js_string}')
-    </#outputformat>
-    <#else>
-    var locale = 'en'
-    var l18Msg = {}
-    </#if>
-  </script>
-
-    <#if properties.favIcon?has_content>
-      <link rel="icon" href="${resourceUrl}${properties.favIcon}" type="image/x-icon"/>
-    <#else>
-      <link rel="icon" href="${resourceUrl}/public/favicon.ico" type="image/x-icon"/>
+    <#if !isSecureContext>
+      <script type="module" src="${resourceCommonUrl}/vendor/web-crypto-shim/web-crypto-shim.js"></script>
     </#if>
 
-  <script src="${authUrl}js/keycloak.js"></script>
-
-    <#if properties.developmentMode?has_content && properties.developmentMode == "true">
-      <!-- Don't use this in production: -->
-      <script src="${resourceUrl}/node_modules/react/umd/react.development.js" crossorigin></script>
-      <script src="${resourceUrl}/node_modules/react-dom/umd/react-dom.development.js" crossorigin></script>
-      <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+    <#if entryStyles?has_content>
+      <#list entryStyles as style>
+        <link rel="stylesheet" href="${resourceUrl}/${style}">
+      </#list>
     </#if>
-
-    <#if properties.extensions?has_content>
-        <#list properties.extensions?split(' ') as script>
-            <#if properties.developmentMode?has_content && properties.developmentMode == "true">
-              <script type="text/babel" src="${resourceUrl}/${script}"></script>
-            <#else>
-              <script type="text/javascript" src="${resourceUrl}/${script}"></script>
-            </#if>
-        </#list>
+    <#if entryImports?has_content>
+      <#list entryImports as import>
+        <link rel="modulepreload" href="${resourceUrl}/${import}">
+      </#list>
     </#if>
-
-    <#if properties.scripts?has_content>
-        <#list properties.scripts?split(' ') as script>
-          <script type="text/javascript" src="${resourceUrl}/${script}"></script>
-        </#list>
-    </#if>
-
-  <script>
-    var content =
-    <#include "resources/content.json"/>
-  </script>
-
-  <link rel="stylesheet" type="text/css"
-        href="${resourceCommonUrl}/web_modules/@patternfly/react-core/dist/styles/base.css"/>
-  <link rel="stylesheet" type="text/css"
-        href="${resourceCommonUrl}/web_modules/@patternfly/react-core/dist/styles/app.css"/>
-  <link rel="stylesheet" type="text/css"
-        href="${resourceCommonUrl}/web_modules/@patternfly/patternfly/patternfly-addons.css"/>
-  <link href="${resourceUrl}/public/layout.css" rel="stylesheet"/>
 
     <#if properties.styles?has_content>
-        <#list properties.styles?split(' ') as style>
-          <link href="${resourceUrl}/${style}" rel="stylesheet"/>
-        </#list>
+      <#list properties.styles?split(' ') as style>
+        <link rel="stylesheet" href="${resourceUrl}/${style}">
+      </#list>
     </#if>
-  <style>
-    .pf-c-button.pf-m-primary {
-      background-color: #027d77;
-      color: #ffffff;
-    }
 
-    .topnav {
-      background-color: #333;
-      overflow: hidden;
-    }
+    <style>
+      :root {
+        --openmrs-primary: #027d77;
+        --openmrs-primary-hover: #016b66;
+        --openmrs-topbar-bg: #333;
+        --openmrs-text: #151515;
+        --openmrs-page-bg: #fff;
+        --openmrs-card-bg: #fff;
+        --openmrs-card-border: #d2d2d2;
+        --openmrs-footer-bg: #f5f5f5;
+        --openmrs-link: #06c;
+      }
 
-    .topnav a {
-      float: left;
-      color: #f2f2f2;
-      text-align: center;
-      padding: 4px 16px;
-      text-decoration: none;
-      font-size: 14px;
-    }
+      /* Dark mode is enabled by v3's bootstrap script adding pf-v5-theme-dark
+         to <html> when prefers-color-scheme: dark. PF5 redefines its own
+         tokens scoped to that class but doesn't expose top-level page/text
+         colors usable from a custom landing, so we maintain our own pair. */
+      :root.pf-v5-theme-dark {
+        --openmrs-text: #e0e0e0;
+        --openmrs-page-bg: #1b1d21;
+        --openmrs-card-bg: #292929;
+        --openmrs-card-border: #444;
+        --openmrs-footer-bg: #151515;
+        --openmrs-link: #73bcf7;
+      }
 
-    .topnav a:hover {
-      background-color: #ddd;
-      color: black;
-    }
+      body, html {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        font-family: var(--pf-v5-global--FontFamily--text, "RedHatText", "Open Sans", helvetica, arial, sans-serif);
+        color: var(--openmrs-text);
+        background: var(--openmrs-page-bg);
+      }
 
-    .topnav a.active {
-      background-color: #027d77;
-      color: white;
-    }
-  </style>
-</head>
+      [hidden] {
+        display: none !important;
+      }
 
-<body>
-<div class="topnav">
-  <a target="_parent" href="https://openmrs.org">OpenMRS.org</a>
-  <a class="active" href="#">ID</a>
-  <a target="_parent" href="https://addons.openmrs.org">Addons</a>
-  <a target="_parent" href="https://wiki.openmrs.org">Wiki</a>
-  <a target="_parent" href="https://atlas.openmrs.org">Atlas</a>
-  <a target="_parent" href="https://talk.openmrs.org/c/ask">Ask OpenMRS</a>
-  <a target="_parent" href="https://talk.openmrs.org">Talk</a>
-  <a target="_parent" href="https://wiki.openmrs.org/display/IRC/Home">Chat</a>
-  <a target="_parent" href="https://issues.openmrs.org">Issues</a>
-  <a target="_parent" href="https://www.github.com/OpenMRS">Code</a>
-  <a target="_parent" href="https://ci.openmrs.org">CI</a>
-</div>
-<script>
-  var keycloak = new Keycloak({
-    authServerUrl: authUrl,
-    realm: realm,
-    clientId: 'account-console',
-  })
-  keycloak.init({onLoad: 'check-sso', pkceMethod: 'S256', promiseType: 'native'}).then((authenticated) => {
-    isReactLoading = true
-    toggleReact()
-    if (!keycloak.authenticated) {
-      document.getElementById('landingSignInButton').style.display = 'inline'
-      document.getElementById('landingSignInLink').style.display = 'inline'
-      document.getElementById('joinOrSignSection').style.display = 'inline'
-    } else {
-      document.getElementById('actions').style.display = 'inline'
-      document.getElementById('landingSignOutButton').style.display = 'inline'
-      document.getElementById('landingSignOutLink').style.display = 'inline'
-      document.getElementById('landingLoggedInUser').innerHTML = loggedInUserName('${msg("unknownUser")}', '${msg("fullName")}')
-    }
+      .openmrs-spinner-screen {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .openmrs-spinner-screen img {
+        height: 60px;
+        margin-bottom: 1rem;
+      }
 
-    loadjs('/Main.js')
-  }).catch(() => {
-    alert('failed to initialize keycloak')
-  })
-</script>
+      .openmrs-landing {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .openmrs-landing__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 2rem;
+        background: var(--openmrs-topbar-bg);
+        color: #fff;
+      }
+      .openmrs-landing__brand img {
+        height: 35px;
+        display: block;
+      }
+      .openmrs-landing__header-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .openmrs-landing__main {
+        flex: 1;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .openmrs-landing__welcome h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.75rem;
+      }
+      .openmrs-landing__welcome p {
+        max-width: 70ch;
+        line-height: 1.5;
+      }
+      .openmrs-landing__cta {
+        margin-top: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .openmrs-landing__cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+      .openmrs-landing__card {
+        background: var(--openmrs-card-bg);
+        border: 1px solid var(--openmrs-card-border);
+        border-radius: 4px;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .openmrs-landing__card h2 {
+        margin: 0 0 0.75rem;
+        font-size: 1.15rem;
+      }
+      .openmrs-landing__card-link {
+        display: inline-block;
+        padding: 0.25rem 0;
+        color: var(--openmrs-link);
+        text-decoration: none;
+        cursor: pointer;
+        background: none;
+        border: 0;
+        font: inherit;
+        text-align: left;
+      }
+      .openmrs-landing__card-link:hover {
+        text-decoration: underline;
+      }
+      .openmrs-landing__footer {
+        padding: 1.5rem 2rem;
+        background: var(--openmrs-footer-bg);
+        border-top: 1px solid var(--openmrs-card-border);
+      }
+      .openmrs-landing__footer h2 {
+        margin: 0 0 0.5rem;
+        font-size: 1.1rem;
+      }
+      .openmrs-landing__footer p {
+        margin: 0;
+        max-width: 70ch;
+        line-height: 1.5;
+      }
 
-<div id="main_react_container" style="display:none;height:100%"></div>
+      .openmrs-btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: var(--openmrs-primary);
+        color: #fff;
+        border: 0;
+        border-radius: 3px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        line-height: 1.2;
+      }
+      .openmrs-btn:hover {
+        background: var(--openmrs-primary-hover);
+        color: #fff;
+      }
 
-<div id="spinner_screen" style="display:block; height:100%">
-  <div
-    style="width: 320px; height: 328px; text-align: center; position: absolute; top:0;	bottom: 0; left: 0;	right: 0; margin: auto;">
-      <#if properties.logo?has_content>
-        <img src="${resourceUrl}${properties.logo}" alt="Logo" class="brand">
-      <#else>
-        <img src="${resourceUrl}/public/logo.svg" alt="Logo" class="brand">
-      </#if>
-    <p>${msg("loadingMessage")}</p>
-    <div>
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-           style="margin: auto; background: rgb(255, 255, 255); display: block; shape-rendering: auto;"
-           width="200px"
-           height="200px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid">
-        <path d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="#5DBCD2" stroke="none"
-              transform="rotate(16.3145 50 51)">
-          <animateTransform attributeName="transform" type="rotate" dur="1s" repeatCount="indefinite"
-                            keyTimes="0;1"
-                            values="0 50 51;360 50 51"></animateTransform>
+      .openmrs-topnav {
+        display: flex;
+        flex-wrap: wrap;
+        background: var(--openmrs-topbar-bg);
+        padding: 0 0.5rem;
+      }
+      .openmrs-topnav a {
+        color: #f2f2f2;
+        text-decoration: none;
+        padding: 0.25rem 1rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+      }
+      .openmrs-topnav a:hover {
+        background: #ddd;
+        color: #000;
+      }
+      .openmrs-topnav a.active {
+        background: var(--openmrs-primary);
+        color: #fff;
+      }
+    </style>
+  </head>
+
+  <body data-page-id="account">
+    <nav class="openmrs-topnav" aria-label="OpenMRS site navigation">
+      <a target="_parent" href="https://openmrs.org">OpenMRS.org</a>
+      <a class="active" href="#">ID</a>
+      <a target="_parent" href="https://addons.openmrs.org">Addons</a>
+      <a target="_parent" href="https://wiki.openmrs.org">Wiki</a>
+      <a target="_parent" href="https://atlas.openmrs.org">Atlas</a>
+      <a target="_parent" href="https://talk.openmrs.org/c/ask">Ask OpenMRS</a>
+      <a target="_parent" href="https://talk.openmrs.org">Talk</a>
+      <a target="_parent" href="https://wiki.openmrs.org/display/IRC/Home">Chat</a>
+      <a target="_parent" href="https://issues.openmrs.org">Issues</a>
+      <a target="_parent" href="https://www.github.com/OpenMRS">Code</a>
+      <a target="_parent" href="https://ci.openmrs.org">CI</a>
+    </nav>
+
+    <div id="spinner-screen" class="openmrs-spinner-screen">
+      <img src="${resourceUrl}${properties.logo!'/public/logo-white.png'}" alt="OpenMRS">
+      <p>${msg("loadingMessage")}</p>
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="#5DBCD2" stroke="none">
+          <animateTransform attributeName="transform" type="rotate" dur="1s" repeatCount="indefinite" values="0 50 51;360 50 51"/>
         </path>
       </svg>
     </div>
-  </div>
-</div>
 
-<div id="welcomeScreen" style="display:none;height:100%">
-  <div class="pf-c-page" id="page-layout-default-nav">
-    <header role="banner" class="pf-c-page__header">
-      <div class="pf-c-page__header-brand">
-          <#if properties.logoUrl?has_content>
-        <a id="landingLogo" class="pf-c-page__header-brand-link" href="${properties.logoUrl}">
-            <#else>
-          <a id="landingLogo" class="pf-c-page__header-brand-link" href="${baseUrl}">
-              </#if>
-              <#if properties.logo?has_content>
-                <img class="pf-c-brand brand" src="${resourceUrl}${properties.logo}" alt="Logo">
-              <#else>
-                <img class="pf-c-brand brand" src="${resourceUrl}/public/logo.svg" alt="Logo">
-              </#if>
-          </a>
+    <div id="openmrs-landing" class="openmrs-landing" hidden>
+      <header class="openmrs-landing__header">
+        <a class="openmrs-landing__brand" href="${properties.logoUrl!baseUrl}">
+          <img src="${resourceUrl}${properties.logo!'/public/logo-white.png'}" alt="OpenMRS">
         </a>
-      </div>
-      <div class="pf-c-page__header-tools">
-          <#if referrer?has_content && referrer_uri?has_content>
-            <div class="pf-c-page__header-tools-group pf-m-icons pf-u-display-none pf-u-display-flex-on-md">
-              <a id="landingReferrerLink" href="${referrer_uri}" class="pf-c-button pf-m-link" tabindex="0">
-                  <span class="pf-c-button__icon pf-m-start">
-                      <i class="pf-icon pf-icon-arrow" aria-hidden="true"></i>
-                  </span>
-                  ${msg("backTo",referrerName)}
-              </a>
-            </div>
-          </#if>
-
-        <div class="pf-c-page__header-tools-group pf-m-icons pf-u-display-none pf-u-display-flex-on-md pf-u-mr-md">
-          <button id="landingSignInButton" tabindex="0" style="display:none" onclick="keycloak.login();"
-                  class="pf-c-button pf-m-primary" type="button">${msg("doSignIn")}</button>
-          <button id="landingSignOutButton" tabindex="0" style="display:none" onclick="keycloak.logout();"
-                  class="pf-c-button pf-m-primary" type="button">${msg("doSignOut")}</button>
+        <div class="openmrs-landing__header-actions">
+          <button id="landing-sign-in" class="openmrs-btn" hidden type="button">${msg("doSignIn")}</button>
+          <button id="landing-sign-out" class="openmrs-btn" hidden type="button">${msg("doSignOut")}</button>
         </div>
+      </header>
 
-        <!-- Kebab for mobile -->
-        <div class="pf-c-page__header-tools-group pf-u-display-none-on-md">
-          <div id="landingMobileKebab" class="pf-c-dropdown pf-m-mobile" onclick="toggleMobileDropdown();">
-            <!-- pf-m-expanded -->
-            <button aria-label="Actions" tabindex="0" id="landingMobileKebabButton"
-                    class="pf-c-dropdown__toggle pf-m-plain" type="button" aria-expanded="true"
-                    aria-haspopup="true">
-              <svg fill="currentColor" height="1em" width="1em" viewBox="0 0 192 512" aria-hidden="true"
-                   role="img"
-                   style="vertical-align: -0.125em;">
-                <path
-                  d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
-                  transform=""></path>
-              </svg>
-            </button>
-            <ul id="landingMobileDropdown" aria-labelledby="landingMobileKebabButton"
-                class="pf-c-dropdown__menu pf-m-align-right" role="menu" style="display:none">
-                <#if referrer?has_content && referrer_uri?has_content>
-                  <li role="none">
-                    <a id="landingMobileReferrerLink" href="${referrer_uri}" role="menuitem"
-                       tabindex="0"
-                       aria-disabled="false"
-                       class="pf-c-dropdown__menu-item">${msg("backTo",referrerName)}</a>
-                  </li>
+      <main class="openmrs-landing__main">
+        <section class="openmrs-landing__welcome">
+          <h1>${msg("accountManagementWelcomeMessage")}</h1>
+          <p>Your OpenMRS ID is the key to participating in our open source community. Use it to access
+            all of the tools and services in the OpenMRS Community.
+            <a href="https://wiki.openmrs.org/display/ISM/OpenMRS+ID">Read more on our Wiki.</a>
+          </p>
+          <div id="join-or-sign-section" class="openmrs-landing__cta" hidden>
+            <button id="landing-register" class="openmrs-btn" type="button">${msg("joinCommunity")}</button>
+            <span>or</span>
+            <button id="landing-sign-in-inline" class="openmrs-btn" type="button">${msg("doSignIn")}</button>
+          </div>
+        </section>
+
+        <section id="actions-section" hidden>
+          <div class="openmrs-landing__cards">
+            <#assign content=theme.apply("content.json")?eval>
+            <#list content as item>
+              <div class="openmrs-landing__card" data-card-id="${item.label}">
+                <h2>${msg(item.label)}</h2>
+                <#if item.children??>
+                  <#list item.children as sub>
+                    <button class="openmrs-landing__card-link" type="button"
+                            data-path="${sub.path!''}"
+                            data-visible="${sub.isVisible!''}">${msg(sub.label)}</button>
+                  </#list>
+                <#else>
+                  <button class="openmrs-landing__card-link" type="button"
+                          data-path="${item.path!''}"
+                          data-visible="${item.isVisible!''}">${msg(item.label)}</button>
                 </#if>
-
-              <li id="landingSignInLink" role="none" style="display:none">
-                <a onclick="keycloak.login();" role="menuitem" tabindex="0" aria-disabled="false"
-                   class="pf-c-dropdown__menu-item">${msg("doSignIn")}</a>
-              </li>
-              <li id="landingSignOutLink" role="none" style="display:none">
-                <a onclick="keycloak.logout();" role="menuitem" tabindex="0" aria-disabled="false"
-                   class="pf-c-dropdown__menu-item">${msg("doSignOut")}</a>
-              </li>
-            </ul>
+              </div>
+            </#list>
           </div>
-        </div>
+        </section>
+      </main>
 
-        <span id="landingLoggedInUser"></span>
+      <footer class="openmrs-landing__footer">
+        <h2>Need help?</h2>
+        <p>If you're having problems accessing or using the OpenMRS Community, please
+          <a href="http://om.rs/helpdesk">open a ticket with our Help Desk</a>. Make sure to include
+          your contact info so that we can respond to your request.
+        </p>
+      </footer>
+    </div>
 
-      </div> <!-- end header tools -->
-    </header>
+    <div id="app" hidden>
+      <main class="container">
+        <div class="keycloak__loading-container">
+          <svg class="pf-v5-c-spinner pf-m-xl" role="progressbar" aria-valuetext="Loading..." viewBox="0 0 100 100" aria-label="Contents">
+            <circle class="pf-v5-c-spinner__path" cx="50" cy="50" r="45" fill="none"></circle>
+          </svg>
+          <p id="loading-text">${msg("loadingMessage")}</p>
+        </div>
+      </main>
+    </div>
 
-    <main role="main" class="pf-c-page__main">
-      <section class="pf-c-page__main-section pf-m-limit-width pf-m-light pf-m-shadow-bottom">
-        <div class="pf-c-page__main-body">
-          <div class="pf-c-content" id="landingWelcomeMessage">
-            <h1>${msg("accountManagementWelcomeMessage")}</h1>
-            <p>Your OpenMRS ID is the key to participating in our open source community. Use it to access
-              all of the tools and services listed on the links at the top of this page.
-              <a href="https://wiki.openmrs.org/display/ISM/OpenMRS+ID">Read more on our Wiki.</a>
-            </p>
-            <div id="joinOrSignSection" style="display: none">
-              <a onclick="keycloak.register();" class="pf-c-button pf-m-primary">
-                ${msg("joinCommunity")}
-              </a>
-              <span style="margin: 0 5px">Or</span>
-              <a onclick="keycloak.login();" class="pf-c-button pf-m-primary">
-                  ${msg("doSignIn")}
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section id="actions" style="display: none"
-               class="pf-c-page__main-section pf-m-limit-width pf-m-overflow-scroll">
-        <div class="pf-c-page__main-body">
-          <div class="pf-l-gallery pf-m-gutter">
-              <#assign content=theme.apply("content.json")?eval>
-              <#list content as item>
-                <div class="pf-l-gallery__item" id="landing-${item.id}">
-                  <div class="pf-c-card pf-m-full-height">
-                    <div>
-                      <div class="pf-c-card__title pf-c-content">
-                        <h2 class="pf-u-display-flex pf-u-w-100 pf-u-flex-direction-column">
-                            <#if item.icon??>
-                              <i class="pf-icon ${item.icon}"></i>
-                            <#elseif item.iconSvg??>
-                              <img src="${item.iconSvg}" alt="icon"/>
-                            </#if>
-                            ${msg(item.label)}
-                        </h2>
-                      </div>
-                      <div class="pf-c-card__body">
-                          <#if item.descriptionLabel??>
-                            <p class="pf-u-mb-md">${msg(item.descriptionLabel)}</p>
-                          </#if>
-                          <#if item.content??>
-                              <#list item.content as sub>
-                                <div id="landing-${sub.id}">
-                                  <a onclick="toggleReact(); window.location.hash='${sub.path}'">${msg(sub.label)}</a>
-                                </div>
-                              </#list>
-                          <#else>
-                            <a id="landing-${item.id}"
-                               onclick="toggleReact(); window.location.hash = '${item.path}'">${msg(item.label)}</a>
-                          </#if>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </#list>
-          </div>
-        </div>
-      </section>
-      <section class="pf-c-page__main-section pf-m-limit-width pf-m-light pf-m-shadow-bottom"
-               style=" position: fixed;left: 0;bottom: 0; width: 100%">
-        <div class="pf-c-page__main-body">
-          <div class="pf-c-content" id="landingWelcomeMessage">
-            <h1>Need help?</h1>
-            <p>If you're having problems accessing or using the OpenMRS Community, please
-              <a href="http://om.rs/helpdesk"> open a support with our Help Desk</a>. Make sure to include
-              your contact info so that we can respond to your request.</a>
-            </p>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-</div>
+    <noscript>JavaScript is required to use the Account Console.</noscript>
 
-<script>
-  const removeHidden = (content) => {
-    content.forEach(c => {
-      if (c.hidden && eval(c.hidden)) {
-        document.getElementById('landing-' + c.id).remove()
+    <script id="environment" type="application/json">
+      {
+        "serverBaseUrl": "${serverBaseUrl}",
+        "authUrl": "${authUrl}",
+        "authServerUrl": "${authServerUrl}",
+        "realm": "${realm.name}",
+        "clientId": "${clientId}",
+        "resourceUrl": "${resourceUrl}",
+        "logo": "${properties.logo!""}",
+        "logoUrl": "${properties.logoUrl!""}",
+        "baseUrl": "${baseUrl}",
+        "locale": "${locale}",
+        "referrerName": "${referrerName!""}",
+        "referrerUrl": "${referrer_uri!""}",
+        "features": {
+          "isRegistrationEmailAsUsername": ${realm.registrationEmailAsUsername?c},
+          "isEditUserNameAllowed": ${realm.editUsernameAllowed?c},
+          "isInternationalizationEnabled": ${realm.isInternationalizationEnabled()?c},
+          "isLinkedAccountsEnabled": ${isLinkedAccountsEnabled?c},
+          "isMyResourcesEnabled": ${(realm.userManagedAccessAllowed && isAuthorizationEnabled)?c},
+          "isViewOrganizationsEnabled": ${isViewOrganizationsEnabled?c},
+          "deleteAccountAllowed": ${deleteAccountAllowed?c},
+          "updateEmailFeatureEnabled": ${updateEmailFeatureEnabled?c},
+          "updateEmailActionEnabled": ${updateEmailActionEnabled?c},
+          "isViewGroupsEnabled": ${isViewGroupsEnabled?c},
+          "isOid4VciEnabled": ${isOid4VciEnabled?c}
+        },
+        "scope": "${scope!""}"
       }
-      if (c.content) removeHidden(c.content)
-    })
-  }
-  removeHidden(content)
-</script>
+    </script>
 
-</body>
+    <script>
+      // FreeMarker → JS bridge: feature flags gate card visibility, and the
+      // bundled landing module needs the auth-server coordinates + the
+      // (content-hashed) React entry path it should lazy-load on card click.
+      window.__openmrsFeatures = {
+        isLinkedAccountsEnabled: ${isLinkedAccountsEnabled?c},
+        isMyResourcesEnabled: ${(realm.userManagedAccessAllowed && isAuthorizationEnabled)?c},
+        isViewOrganizationsEnabled: ${isViewOrganizationsEnabled?c},
+        isViewGroupsEnabled: ${isViewGroupsEnabled?c},
+        isOid4VciEnabled: ${isOid4VciEnabled?c}
+      };
+      window.__OPENMRS_ACCOUNT__ = {
+        authUrl: '${authUrl}',
+        realm: '${realm.name}',
+        entryScript: <#if entryScript?has_content>'${resourceUrl}/${entryScript}'<#else>null</#if>
+      };
+    </script>
+    <script type="module" src="${resourceUrl}/dist/landing.js"></script>
+  </body>
 </html>

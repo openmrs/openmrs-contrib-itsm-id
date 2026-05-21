@@ -1,5 +1,5 @@
 # Stage 1: Build the Extension
-FROM maven:3.9.6 AS extension-builder
+FROM maven:3 AS extension-builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY keycloak-extension/src ./src
 RUN mvn clean install -DskipTests
 
 # Stage 2: Build the TypeScript application
-FROM node:22-slim AS theme-builder
+FROM node:24-slim AS theme-builder
 
 WORKDIR /theme
 
@@ -24,7 +24,7 @@ RUN pnpm run build
 RUN pnpm run build:jar
 
 # Stage 3: Build the Keycloak including the theme and the extension
-FROM quay.io/keycloak/keycloak:26.1.1 as builder
+FROM quay.io/keycloak/keycloak:26.6.2 AS builder
 
 # Enable health support
 ENV KC_HEALTH_ENABLED=true
@@ -49,11 +49,11 @@ RUN dnf install --installroot /mnt/rootfs curl --releasever 9 --setopt install_w
     dnf --installroot /mnt/rootfs clean all && \
     rpm --root /mnt/rootfs -e --nodeps setup
 
-FROM quay.io/keycloak/keycloak:26.1.1
+FROM quay.io/keycloak/keycloak:26.6.2
 
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY --from=ubi-micro-build /mnt/rootfs /
 
-USER 1001
+USER 1000
 
-CMD ["start", "--optimized", "--import-realm", "--http-enabled true", "--spi-theme-welcome-theme=openmrs"]
+CMD ["start", "--optimized", "--import-realm", "--http-enabled=true", "--spi-theme-welcome-theme=openmrs"]

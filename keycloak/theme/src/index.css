@@ -1,33 +1,54 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@config '../tailwind.config.js';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility separate {
+  /* Separate
+    ======================================================================== */
+  @apply flex items-center text-center;
+
+  &::after {
+    content: '';
+    @apply border-b border-secondary-200 flex-1;
+  }
+
+  &::before {
+    content: '';
+    @apply border-b border-secondary-200 flex-1;
+  }
+
+  &:not(:empty)::after {
+    @apply ml-2;
+  }
+
+  &:not(:empty)::before {
+    @apply mr-2;
+  }
+}
 
 @layer components {
   /* Alpine.js
     ======================================================================== */
 
   [x-cloak] {
-    @apply hidden !important;
-  }
-
-  /* Separate
-    ======================================================================== */
-
-  .separate {
-    @apply flex items-center text-center;
-  }
-
-  .separate::after,
-  .separate::before {
-    content: '';
-    @apply border-b border-secondary-200 flex-1;
-  }
-
-  .separate:not(:empty)::after {
-    @apply ml-2;
-  }
-
-  .separate:not(:empty)::before {
-    @apply mr-2;
+    @apply hidden!;
   }
 }

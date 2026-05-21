@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Postgres123}
     healthcheck:
-      test: "pg_isready -U postgres"
+      test: "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"
   keycloak:
     build:
       context: keycloak
@@ -31,10 +31,12 @@ services:
       - "8443:8443"
       # Use when behind load balancer with SSL
       #- "8080:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     depends_on:
       - postgres
     healthcheck:
-      test: curl --head -fsS http://localhost:8080/health/live || exit 1
+      test: curl --head -fsSk https://localhost:9000/health/live || exit 1
   postfix:
     build:
       context: postfix

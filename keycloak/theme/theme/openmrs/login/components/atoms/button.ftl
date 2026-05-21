@@ -22,7 +22,7 @@
   </#switch>
 
   <${component}
-    class="${colorClass} ${sizeClass} flex justify-center relative rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-offset-2"
+    class="${colorClass} ${sizeClass} flex justify-center relative rounded-lg w-full focus:outline-hidden focus:ring-2 focus:ring-offset-2"
 
     <#list rest as attrName, attrValue>
       ${attrName}="${attrValue}"
