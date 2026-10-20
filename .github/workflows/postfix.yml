@@ -1,0 +1,52 @@
+name: Postfix image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "postfix/**"
+      - ".github/workflows/postfix.yml"
+  pull_request:
+    paths:
+      - "postfix/**"
+      - ".github/workflows/postfix.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Tag as <alpine version>-<short sha>, taking the version from the FROM line of the Dockerfile
+      - name: Determine image version
+        id: version
+        run: |
+          alpine_version=$(grep -E '^FROM alpine:' postfix/Dockerfile | tail -n 1 | sed -E 's/^FROM [^:]+:([^ ]+).*/\1/')
+          if [ -z "$alpine_version" ]; then
+            echo "Could not determine the Alpine version from postfix/Dockerfile" >&2
+            exit 1
+          fi
+          echo "tag=${alpine_version}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: postfix
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            openmrsinfra/openmrs-id-postfix:${{ steps.version.outputs.tag }}
+            openmrsinfra/openmrs-id-postfix:nightly
+          cache-from: type=gha,scope=postfix
+          cache-to: type=gha,mode=max,scope=postfix
