@@ -24,7 +24,7 @@ RUN pnpm run build
 RUN pnpm run build:jar
 
 # Stage 3: Build the Keycloak including the theme and the extension
-FROM quay.io/keycloak/keycloak:26.6.2 AS builder
+FROM quay.io/keycloak/keycloak:26.8.1 AS builder
 
 # Enable health support
 ENV KC_HEALTH_ENABLED=true
@@ -49,7 +49,7 @@ RUN dnf install --installroot /mnt/rootfs curl --releasever 9 --setopt install_w
     dnf --installroot /mnt/rootfs clean all && \
     rpm --root /mnt/rootfs -e --nodeps setup
 
-FROM quay.io/keycloak/keycloak:26.6.2
+FROM quay.io/keycloak/keycloak:26.8.1
 
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 COPY --from=ubi-micro-build /mnt/rootfs /

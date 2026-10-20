@@ -14,7 +14,10 @@ services:
       context: keycloak
       dockerfile: Dockerfile
     environment:
-      KC_HOSTNAME: ${HOSTNAME:-localhost}
+      # Either set HOSTNAME to pin a single public URL, or leave it empty and set HOSTNAME_STRICT=false
+      # to answer on whichever hostname the proxy forwards.
+      KC_HOSTNAME: ${HOSTNAME:-}
+      KC_HOSTNAME_STRICT: ${HOSTNAME_STRICT:-true}
       KC_DB: postgres
       KC_DB_URL_DATABASE: ${POSTGRES_DB:-postgres}
       KC_DB_URL_HOST: postgres
@@ -23,18 +26,21 @@ services:
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-Postgres123}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-Admin123}
-      # Use when behind load balancer with SSL
-      # KC_PROXY: edge
+      # TLS is terminated by nginx, which sends X-Forwarded-* (not RFC 7239 Forwarded) headers
+      KC_PROXY_HEADERS: xforwarded
+      # Single-node deployment; avoids clustered cache discovery delays on restart
+      KC_CACHE: local
     ports:
-      - "8443:8443"
-      # Use when behind load balancer with SSL
-      #- "8080:8080"
+      - "127.0.0.1:8443:8443"
+      # Plain HTTP, used by the TLS-terminating proxy on the same host
+      - "127.0.0.1:8080:8080"
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     depends_on:
       - postgres
     healthcheck:
       test: curl --head -fsSk https://localhost:9000/health/ready || exit 1
+
   postfix:
     build:
       context: postfix
@@ -42,8 +48,8 @@ services:
     volumes:
       - ip_updater_logs:/var/logs/ip_updater/
     ports:
-      - "225:25"
-      - "8090:8090"  # Health check port
+      - "127.0.0.1:225:25"
+      - "127.0.0.1:8090:8090"  # Health check port
     healthcheck:
       test: postfix status
     environment:
