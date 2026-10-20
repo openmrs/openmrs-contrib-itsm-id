@@ -1,8 +1,10 @@
 services:
   postgres:
-    image: postgres
+    # Must match the major version of the data in postgres_data; changing it requires a dump/restore.
+    # Since PG18 the image keeps its data under /var/lib/postgresql/<major>/.
+    image: postgres:18
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
