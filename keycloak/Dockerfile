@@ -1,5 +1,8 @@
+# The extension, theme and `kc.sh build` stages produce only Java/JS artifacts, so they run on the
+# build machine's own platform; only the stages that produce the final image run per target platform.
+
 # Stage 1: Build the Extension
-FROM maven:3 AS extension-builder
+FROM --platform=$BUILDPLATFORM maven:3 AS extension-builder
 
 WORKDIR /app
 
@@ -10,7 +13,7 @@ COPY keycloak-extension/src ./src
 RUN mvn clean install -DskipTests
 
 # Stage 2: Build the TypeScript application
-FROM node:24-slim AS theme-builder
+FROM --platform=$BUILDPLATFORM node:24-slim AS theme-builder
 
 WORKDIR /theme
 
@@ -24,7 +27,7 @@ RUN pnpm run build
 RUN pnpm run build:jar
 
 # Stage 3: Build the Keycloak including the theme and the extension
-FROM quay.io/keycloak/keycloak:26.8.1 AS builder
+FROM --platform=$BUILDPLATFORM quay.io/keycloak/keycloak:26.8.1 AS builder
 
 # Enable health support
 ENV KC_HEALTH_ENABLED=true
