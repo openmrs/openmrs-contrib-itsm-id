@@ -3,6 +3,7 @@ name: Promote images to production
 # Re-points :production at the images currently tagged :staging, without rebuilding, so production
 # runs exactly what was tested on staging.
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
