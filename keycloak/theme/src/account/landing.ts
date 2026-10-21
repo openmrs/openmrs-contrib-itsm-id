@@ -44,7 +44,10 @@ function navigateToConsole(path: string) {
   loadReactEntry();
 }
 
-if (window.location.hash && window.location.hash.length > 1) {
+const query = new URLSearchParams(window.location.search);
+const isConsoleCallback = query.has('state') && (query.has('code') || query.has('error'));
+
+if (window.location.hash.startsWith('#/') || isConsoleCallback) {
   navigateToConsole('');
 } else {
   const keycloak = new Keycloak({
