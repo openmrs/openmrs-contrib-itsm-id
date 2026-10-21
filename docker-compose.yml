@@ -16,10 +16,10 @@ services:
       context: keycloak
       dockerfile: Dockerfile
     environment:
-      # Either set HOSTNAME to pin a single public URL, or leave it empty and set HOSTNAME_STRICT=false
+      # Either set KC_HOSTNAME to pin a single public URL, or leave it empty and set KC_HOSTNAME_STRICT=false
       # to answer on whichever hostname the proxy forwards.
-      KC_HOSTNAME: ${HOSTNAME:-}
-      KC_HOSTNAME_STRICT: ${HOSTNAME_STRICT:-true}
+      KC_HOSTNAME: ${KC_HOSTNAME:-}
+      KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:-true}
       KC_DB: postgres
       KC_DB_URL_DATABASE: ${POSTGRES_DB:-postgres}
       KC_DB_URL_HOST: postgres
