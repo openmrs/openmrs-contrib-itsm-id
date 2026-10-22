@@ -55,7 +55,7 @@
         <li>
           <p>${msg("loginTotpStep2")}</p>
           <img
-            alt="Figure: Barcode"
+            alt="${msg("loginTotpQrCodeAlt")}"
             class="mx-auto"
             src="data:image/png;base64, ${totp.totpSecretQrCode}"
           >

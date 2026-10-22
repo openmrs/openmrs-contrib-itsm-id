@@ -148,6 +148,14 @@
         max-width: 70ch;
         line-height: 1.5;
       }
+      .openmrs-landing__language-note {
+        max-width: 70ch;
+        padding: 0.75rem 1rem;
+        background: var(--openmrs-card-bg);
+        border: 1px solid var(--openmrs-card-border);
+        border-radius: 4px;
+        line-height: 1.5;
+      }
       .openmrs-landing__cta {
         margin-top: 1.25rem;
         display: flex;
@@ -244,7 +252,7 @@
   </head>
 
   <body data-page-id="account">
-    <nav class="openmrs-topnav" aria-label="OpenMRS site navigation">
+    <nav class="openmrs-topnav" aria-label="${msg("accountSiteNavigation")}">
       <a target="_parent" href="https://openmrs.org">OpenMRS.org</a>
       <a class="active" href="#">ID</a>
       <a target="_parent" href="https://addons.openmrs.org">Addons</a>
@@ -252,9 +260,9 @@
       <a target="_parent" href="https://atlas.openmrs.org">Atlas</a>
       <a target="_parent" href="https://talk.openmrs.org/c/ask">Ask OpenMRS</a>
       <a target="_parent" href="https://talk.openmrs.org">Talk</a>
-      <a target="_parent" href="https://wiki.openmrs.org/display/IRC/Home">Chat</a>
+      <a target="_parent" href="https://slack.openmrs.org">Slack</a>
       <a target="_parent" href="https://issues.openmrs.org">Issues</a>
-      <a target="_parent" href="https://www.github.com/OpenMRS">Code</a>
+      <a target="_parent" href="https://github.com/OpenMRS">Code</a>
       <a target="_parent" href="https://ci.openmrs.org">CI</a>
     </nav>
 
@@ -282,13 +290,13 @@
       <main class="openmrs-landing__main">
         <section class="openmrs-landing__welcome">
           <h1>${msg("accountManagementWelcomeMessage")}</h1>
-          <p>Your OpenMRS ID is the key to participating in our open source community. Use it to access
-            all of the tools and services in the OpenMRS Community.
-            <a href="https://wiki.openmrs.org/display/ISM/OpenMRS+ID">Read more on our Wiki.</a>
-          </p>
+          <p>${msg("accountWelcomeIntro", '<a href="https://wiki.openmrs.org/display/ISM/OpenMRS+ID">', '</a>')?no_esc}</p>
+          <#if !(locale!'en')?lower_case?starts_with("en")>
+            <p class="openmrs-landing__language-note">${msg("accountEnglishCommunityNote")}</p>
+          </#if>
           <div id="join-or-sign-section" class="openmrs-landing__cta" hidden>
             <button id="landing-register" class="openmrs-btn" type="button">${msg("joinCommunity")}</button>
-            <span>or</span>
+            <span>${msg("accountWelcomeOr")}</span>
             <button id="landing-sign-in-inline" class="openmrs-btn" type="button">${msg("doSignIn")}</button>
           </div>
         </section>
@@ -317,18 +325,15 @@
       </main>
 
       <footer class="openmrs-landing__footer">
-        <h2>Need help?</h2>
-        <p>If you're having problems accessing or using the OpenMRS Community, please
-          <a href="http://om.rs/helpdesk">open a ticket with our Help Desk</a>. Make sure to include
-          your contact info so that we can respond to your request.
-        </p>
+        <h2>${msg("accountHelpTitle")}</h2>
+        <p>${msg("accountHelpText", '<a href="http://om.rs/helpdesk">', '</a>')?no_esc}</p>
       </footer>
     </div>
 
     <div id="app" hidden>
       <main class="container">
         <div class="keycloak__loading-container">
-          <svg class="pf-v5-c-spinner pf-m-xl" role="progressbar" aria-valuetext="Loading..." viewBox="0 0 100 100" aria-label="Contents">
+          <svg class="pf-v5-c-spinner pf-m-xl" role="progressbar" aria-valuetext="${msg("accountSpinnerValueText")}" viewBox="0 0 100 100" aria-label="${msg("accountSpinnerLabel")}">
             <circle class="pf-v5-c-spinner__path" cx="50" cy="50" r="45" fill="none"></circle>
           </svg>
           <p id="loading-text">${msg("loadingMessage")}</p>
@@ -336,7 +341,7 @@
       </main>
     </div>
 
-    <noscript>JavaScript is required to use the Account Console.</noscript>
+    <noscript>${msg("accountNoScript")}</noscript>
 
     <script id="environment" type="application/json">
       {
