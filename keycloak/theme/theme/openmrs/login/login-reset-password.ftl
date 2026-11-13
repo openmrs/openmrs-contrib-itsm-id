@@ -4,6 +4,7 @@
 <#import "components/atoms/form.ftl" as form>
 <#import "components/atoms/input.ftl" as input>
 <#import "components/atoms/link.ftl" as link>
+<#import "components/molecules/turnstile.ftl" as turnstile>
 <#import "features/labels/username.ftl" as usernameLabel>
 
 <#assign usernameLabel><@usernameLabel.kw /></#assign>
@@ -28,6 +29,7 @@
         type="text"
         value=(auth?has_content && auth.showUsername())?then(auth.attemptedUsername, '')
       />
+      <@turnstile.kw />
       <@buttonGroup.kw>
         <@button.kw color="primary" type="submit">
           ${msg("doSubmit")}

@@ -37,7 +37,7 @@
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
-  "bruteForceProtected": false,
+  "bruteForceProtected": true,
   "permanentLockout": false,
   "maxFailureWaitSeconds": 900,
   "minimumQuickLoginWaitSeconds": 60,
@@ -1035,7 +1035,7 @@
     "referrerPolicy": "no-referrer",
     "xRobotsTag": "none",
     "xFrameOptions": "SAMEORIGIN",
-    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "contentSecurityPolicy": "frame-src 'self' https://challenges.cloudflare.com; frame-ancestors 'self'; object-src 'none';",
     "xXSSProtection": "1; mode=block",
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
   },
@@ -1675,9 +1675,9 @@
           "userSetupAllowed": false
         },
         {
-          "authenticator": "registration-recaptcha-action",
+          "authenticator": "registration-turnstile-action",
           "authenticatorFlow": false,
-          "requirement": "DISABLED",
+          "requirement": "REQUIRED",
           "priority": 60,
           "autheticatorFlow": false,
           "userSetupAllowed": false
@@ -1701,7 +1701,7 @@
       "builtIn": true,
       "authenticationExecutions": [
         {
-          "authenticator": "reset-credentials-choose-user",
+          "authenticator": "reset-credentials-turnstile",
           "authenticatorFlow": false,
           "requirement": "REQUIRED",
           "priority": 10,
