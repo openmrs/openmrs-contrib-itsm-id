@@ -1,0 +1,181 @@
+# Fictional seed data mirroring the shape of ldap.openmrs.org. The __*_PASSWORD__ placeholders are
+# replaced with password hashes by entrypoint.sh. erin is in none of the Atlassian groups and frank is only
+# in confluence-users. Groups carry an empty member value, as production does, because groupOfNames
+# requires at least one member.
+
+dn: dc=openmrs,dc=org
+objectClass: dcObject
+objectClass: organization
+dc: openmrs
+o: OpenMRS
+
+dn: ou=users,dc=openmrs,dc=org
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=openmrs,dc=org
+objectClass: organizationalUnit
+ou: groups
+
+dn: ou=system,dc=openmrs,dc=org
+objectClass: organizationalUnit
+ou: system
+
+dn: uid=omrsid,ou=system,dc=openmrs,dc=org
+objectClass: account
+objectClass: simpleSecurityObject
+uid: omrsid
+userPassword: __BIND_PASSWORD__
+
+dn: uid=alice,ou=users,dc=openmrs,dc=org
+objectClass: inetOrgPerson
+objectClass: extensibleObject
+uid: alice
+cn: Alice
+sn: Adeyemi
+displayName: Alice Adeyemi
+mail: alice@example.com
+userPassword: __USER_PASSWORD__
+
+dn: uid=bob,ou=users,dc=openmrs,dc=org
+objectClass: inetOrgPerson
+objectClass: extensibleObject
+uid: bob
+cn: Bob
+sn: Byaruhanga
+displayName: Bob Byaruhanga
+mail: bob@example.com
+userPassword: __USER_PASSWORD__
+
+dn: uid=carol,ou=users,dc=openmrs,dc=org
+objectClass: inetOrgPerson
+objectClass: extensibleObject
+uid: carol
+cn: Carol
+sn: Chanda
+displayName: Carol Chanda
+mail: carol@example.com
+userPassword: __USER_PASSWORD__
+
+dn: uid=dave,ou=users,dc=openmrs,dc=org
+objectClass: inetOrgPerson
+objectClass: extensibleObject
+uid: dave
+cn: Dave
+sn: Dlamini
+displayName: Dave Dlamini
+mail: dave@example.com
+userPassword: __USER_PASSWORD__
+
+dn: uid=erin,ou=users,dc=openmrs,dc=org
+objectClass: inetOrgPerson
+objectClass: extensibleObject
+uid: erin
+cn: Erin
+sn: Eze
+displayName: Erin Eze
+mail: erin@example.com
+userPassword: __USER_PASSWORD__
+
+dn: uid=frank,ou=users,dc=openmrs,dc=org
+objectClass: inetOrgPerson
+objectClass: extensibleObject
+uid: frank
+cn: Frank
+sn: Fofanah
+displayName: Frank Fofanah
+mail: frank@example.com
+userPassword: __USER_PASSWORD__
+
+dn: cn=confluence-administrators,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: confluence-administrators
+member:
+member: uid=alice,ou=users,dc=openmrs,dc=org
+
+dn: cn=confluence-editors,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: confluence-editors
+member:
+member: uid=carol,ou=users,dc=openmrs,dc=org
+
+dn: cn=confluence-users,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: confluence-users
+member:
+member: uid=frank,ou=users,dc=openmrs,dc=org
+member: uid=alice,ou=users,dc=openmrs,dc=org
+member: uid=bob,ou=users,dc=openmrs,dc=org
+member: uid=carol,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-administrators,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-administrators
+member:
+member: uid=alice,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-bulk-change,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-bulk-change
+member:
+member: uid=dave,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-chg-approver,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-chg-approver
+member:
+member: uid=bob,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-chg-requestor,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-chg-requestor
+member:
+member: uid=carol,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-developers,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-developers
+member:
+member: uid=bob,ou=users,dc=openmrs,dc=org
+member: uid=dave,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-itsm,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-itsm
+member:
+member: uid=dave,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-trunk-admin,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-trunk-admin
+member:
+member: uid=alice,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-trunk-approver,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-trunk-approver
+member:
+member: uid=bob,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-trunk-developer,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-trunk-developer
+member:
+member: uid=alice,ou=users,dc=openmrs,dc=org
+member: uid=bob,ou=users,dc=openmrs,dc=org
+
+dn: cn=jira-users,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: jira-users
+member:
+member: uid=alice,ou=users,dc=openmrs,dc=org
+member: uid=bob,ou=users,dc=openmrs,dc=org
+member: uid=carol,ou=users,dc=openmrs,dc=org
+member: uid=dave,ou=users,dc=openmrs,dc=org
+
+dn: cn=infrastructure,ou=groups,dc=openmrs,dc=org
+objectClass: groupOfNames
+cn: infrastructure
+member:
+member: uid=alice,ou=users,dc=openmrs,dc=org
+member: uid=erin,ou=users,dc=openmrs,dc=org

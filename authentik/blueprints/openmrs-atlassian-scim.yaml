@@ -1,0 +1,202 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+#
+# Provisions OpenMRS ID (LDAP) users and selected groups into Atlassian over SCIM. authentik is only a sync
+# engine here: users never log in to it, and Keycloak remains the identity provider for Atlassian.
+#
+#   LDAP (users, groups) --LDAP source--> authentik --SCIM provider--> Atlassian
+#
+# Only the groups listed in `atlassian_groups` below are pushed, and only users who are members of at least
+# one of them are provisioned. A provisioned user who leaves all of them is deactivated in Atlassian at the
+# next full sync. Values that differ between environments come from the worker's environment; see
+# .env.template.
+version: 1
+metadata:
+  name: OpenMRS - LDAP to Atlassian SCIM
+  labels:
+    blueprints.goauthentik.io/description: Sync OpenMRS ID users and Atlassian groups from LDAP to Atlassian
+
+context:
+  ldap_source_slug: openmrs-ldap
+  # Names of the LDAP groups pushed to Atlassian. Removing a name stops updates to that group in Atlassian
+  # but does not delete it there, and deactivates users who were only in that group.
+  atlassian_groups:
+    - confluence-administrators
+    - confluence-editors
+    - confluence-users
+    - jira-administrators
+    - jira-bulk-change
+    - jira-chg-approver
+    - jira-chg-requestor
+    - jira-developers
+    - jira-itsm
+    - jira-trunk-admin
+    - jira-trunk-approver
+    - jira-trunk-developer
+    - jira-users
+
+entries:
+  # Blueprints are applied in parallel on start-up; this one uses a managed mapping from the system LDAP
+  # blueprint, so apply that first
+  - model: authentik_blueprints.metaapplyblueprint
+    attrs:
+      identifiers:
+        path: system/sources-ldap.yaml
+      required: true
+
+  - model: authentik_sources_ldap.ldapsourcepropertymapping
+    identifiers:
+      name: "OpenMRS LDAP Mapping: User"
+    id: ldap-user-mapping
+    attrs:
+      expression: |
+        # LDAP returns multi-valued attributes as lists; authentik flattens top-level fields but not these
+        given_name = list_flatten(ldap.get("cn"))
+        family_name = list_flatten(ldap.get("sn"))
+        name = ldap.get("displayName") or " ".join(n for n in (given_name, family_name) if n)
+        return {
+            "username": ldap.get("uid"),
+            "name": name,
+            "email": ldap.get("mail"),
+            "attributes": {
+                "given_name": given_name,
+                "family_name": family_name,
+            },
+        }
+
+  - model: authentik_sources_ldap.ldapsource
+    identifiers:
+      slug: !Context ldap_source_slug
+    attrs:
+      name: OpenMRS LDAP
+      enabled: true
+      server_uri: !Env AUTHENTIK_LDAP_URL
+      bind_cn: !Env AUTHENTIK_LDAP_BIND_DN
+      bind_password: !Env AUTHENTIK_LDAP_BIND_PASSWORD
+      base_dn: dc=openmrs,dc=org
+      additional_user_dn: ou=users
+      additional_group_dn: ou=groups
+      user_object_filter: (objectClass=inetOrgPerson)
+      group_object_filter: (objectClass=groupOfNames)
+      object_uniqueness_field: entryUUID
+      group_membership_field: member
+      user_membership_attribute: distinguishedName
+      user_property_mappings:
+        - !KeyOf ldap-user-mapping
+      group_property_mappings:
+        - !Find [authentik_sources_ldap.ldapsourcepropertymapping, [managed, goauthentik.io/sources/ldap/openldap-cn]]
+      sync_users: true
+      sync_groups: true
+      # authentik must never write to LDAP; Keycloak owns passwords
+      sync_users_password: false
+      password_login_update_internal_password: false
+      # A failed or partial LDAP search would otherwise delete users here, and the SCIM provider would then
+      # deactivate them in Atlassian
+      delete_not_found_objects: false
+
+  - model: authentik_providers_scim.scimmapping
+    identifiers:
+      name: "OpenMRS SCIM Mapping: Atlassian User"
+    id: scim-user-mapping
+    attrs:
+      # Atlassian matches accounts by email, and the existing accounts were created through Keycloak's SAML
+      # login with the virtual <username>@<domain> address as NameID, so that address is sent instead of
+      # the user's real email. Users not imported from LDAP (e.g. authentik's own admin) are skipped.
+      expression: !Format
+        - |
+          if not request.user.usersourceconnection_set.filter(source__slug="%s").exists():
+              raise SkipObject
+          email = request.user.username + "@%s"
+          return {
+              "userName": email,
+              "name": {
+                  "givenName": ak_obj_attr(request.user, "given_name") or request.user.name,
+                  "familyName": ak_obj_attr(request.user, "family_name") or None,
+              },
+              "displayName": request.user.name,
+              "active": request.user.is_active,
+              "emails": [{"value": email, "type": "work", "primary": True}],
+          }
+        - !Context ldap_source_slug
+        - !Env ATLASSIAN_EMAIL_DOMAIN
+
+  - model: authentik_providers_scim.scimmapping
+    identifiers:
+      name: "OpenMRS SCIM Mapping: Atlassian Group"
+    id: scim-group-mapping
+    attrs:
+      # Every LDAP group is imported into authentik, but only the atlassian_groups are pushed
+      expression: !Format
+        - |
+          if group.name not in %s:
+              raise SkipObject
+          return {
+              "displayName": group.name,
+          }
+        - !Context atlassian_groups
+
+  - model: authentik_providers_scim.scimprovider
+    identifiers:
+      name: Atlassian
+    id: scim-provider
+    attrs:
+      url: !Env ATLASSIAN_SCIM_URL
+      token: !Env ATLASSIAN_SCIM_TOKEN
+      # In dry-run mode, authentik logs the changes it would make without sending them
+      dry_run: !Env [AUTHENTIK_SCIM_DRY_RUN, "true"]
+      exclude_users_service_account: true
+      property_mappings:
+        - !KeyOf scim-user-mapping
+      property_mappings_group:
+        - !KeyOf scim-group-mapping
+
+  # A SCIM provider only syncs when it is a backchannel provider of an application, and only users who pass
+  # the application's policies are in scope; users who drop out of scope are deleted (deactivated) in
+  # Atlassian at the next full sync.
+  - model: authentik_core.application
+    identifiers:
+      slug: atlassian-scim
+    id: scim-application
+    attrs:
+      name: Atlassian (SCIM provisioning)
+      backchannel_providers:
+        - !KeyOf scim-provider
+
+  # An expression rather than group bindings because the groups only exist in authentik after the first LDAP
+  # sync, and an application with no bindings would put every user in scope until then.
+  - model: authentik_policies_expression.expressionpolicy
+    identifiers:
+      name: OpenMRS - member of an Atlassian group
+    id: atlassian-groups-policy
+    attrs:
+      expression: !Format
+        - |
+          return request.user.groups.filter(name__in=%s).exists()
+        - !Context atlassian_groups
+
+  - model: authentik_policies.policybinding
+    identifiers:
+      target: !KeyOf scim-application
+      policy: !KeyOf atlassian-groups-policy
+    attrs:
+      order: 0
+
+  # A user who joins one of the atlassian_groups is only created in Atlassian by a full SCIM sync (a
+  # membership change only updates the group with users that already exist there). Each LDAP sync starts a
+  # full SCIM sync when it finishes, so the LDAP interval sets how long a new member waits; authentik's
+  # default of 2h is too slow. The scheduled SCIM sync is a fallback for when that triggered sync is skipped
+  # because another is still running; it is offset from the LDAP sync because policy results are cached for
+  # 5 minutes. authentik only sets a schedule's crontab when it creates the schedule, so these values aren't
+  # overwritten.
+  - model: authentik_tasks_schedules.schedule
+    identifiers:
+      actor_name: authentik.sources.ldap.tasks.ldap_sync
+      _uid: !Context ldap_source_slug
+    attrs:
+      crontab: "0,30 * * * *"
+
+  - model: authentik_tasks_schedules.schedule
+    identifiers:
+      actor_name: authentik.providers.scim.tasks.scim_sync
+      _uid: Atlassian
+    attrs:
+      crontab: "15,45 * * * *"

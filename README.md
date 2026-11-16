@@ -16,6 +16,33 @@ This setup will use SAML to connect to Atlassian. You need to add the following 
 3. Copy the following values from Atlassian to Keycloak:
    - Service provider assertion consumer service URL: Copy this value to the "Assertion Consumer Service POST Binding URL" field in the advanced setting tab of the Keycloak client.
 
+### Provisioning users and groups to Atlassian (SCIM)
+
+[authentik](https://goauthentik.io) reads users and groups from LDAP and pushes them to Atlassian's user
+provisioning (SCIM) API. It is only a sync engine: nobody logs in to it, and Keycloak stays the identity provider.
+All of its configuration is in `authentik/blueprints/openmrs-atlassian-scim.yaml`, which the worker applies on
+start-up and whenever the file changes.
+
+- Only the groups listed in `atlassian_groups` in the blueprint are pushed. Synced groups are read-only in
+  Atlassian; manage their membership in Keycloak.
+- Users who are in at least one of those groups are provisioned, identified by the same virtual
+  `<username>@id.openmrs.org` address that Keycloak sends as the SAML NameID, so existing Atlassian accounts are
+  linked rather than duplicated. A provisioned user who is removed from all of them is deactivated in Atlassian at
+  the next full sync.
+- authentik reads LDAP at :00 and :30 and runs a full sync to Atlassian as soon as each read finishes, so a change
+  made in Keycloak reaches Atlassian within about 30 minutes.
+- Groups that already exist in Atlassian have to be approved in admin.atlassian.com (Identity provider directory >
+  Review groups) before SCIM can take them over. Until then, syncs of those groups fail and are retried.
+- Set `AUTHENTIK_SCIM_DRY_RUN=true` to have authentik log the changes it would make without sending them.
+
+The blueprint is built into the `openmrsinfra/openmrs-id-authentik` image (`authentik/Dockerfile`).
+
+`docker-compose.yml` contains only the services that also run in staging and production. Locally,
+`docker compose up` also merges `docker-compose.override.yml`, which adds an `openldap` container with fictional
+users (`dev/openldap`) and a mock SCIM server (`dev/scim-mock`) in place of Atlassian, and points authentik at them. The authentik admin UI is at http://localhost:9000 (user
+`akadmin`, password from `AUTHENTIK_BOOTSTRAP_PASSWORD`), and `curl http://localhost:8001/_admin/state` shows what
+the mock has received.
+
 ## Components
 
 This repository contains the following components that are used to run OpenMRS ID:

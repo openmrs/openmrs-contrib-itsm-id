@@ -1,0 +1,37 @@
+# Local-development additions, merged automatically by `docker compose up`. docker-compose.yml holds only the
+# services that also run in staging and production; this file adds local stand-ins for LDAP and Atlassian
+# and points authentik at them.
+
+services:
+  authentik-worker:
+    environment:
+      AUTHENTIK_LDAP_URL: ${AUTHENTIK_LDAP_URL:-ldap://openldap:389}
+      AUTHENTIK_LDAP_BIND_DN: ${AUTHENTIK_LDAP_BIND_DN:-uid=omrsid,ou=system,dc=openmrs,dc=org}
+      AUTHENTIK_LDAP_BIND_PASSWORD: ${LDAP_BIND_PASSWORD:-password}
+      ATLASSIAN_SCIM_URL: ${ATLASSIAN_SCIM_URL:-http://scim-mock:8000/scim/directory/local}
+      ATLASSIAN_SCIM_TOKEN: ${ATLASSIAN_SCIM_TOKEN:-local-scim-token}
+      ATLASSIAN_EMAIL_DOMAIN: ${ATLASSIAN_EMAIL_DOMAIN:-id.openmrs.org}
+      AUTHENTIK_SCIM_DRY_RUN: ${AUTHENTIK_SCIM_DRY_RUN:-false}
+
+  # Stand-in for ldap.openmrs.org with fictional users; recreated from dev/openldap/seed.ldif
+  openldap:
+    build:
+      context: dev/openldap
+    environment:
+      LDAP_BIND_PASSWORD: ${LDAP_BIND_PASSWORD:-password}
+      LDAP_SEED_USER_PASSWORD: ${LDAP_SEED_USER_PASSWORD:-password}
+    ports:
+      - "127.0.0.1:1389:389"
+
+  # Stand-in for Atlassian's SCIM API; inspect what authentik sent with
+  # curl http://localhost:8001/_admin/state
+  scim-mock:
+    build:
+      context: dev/scim-mock
+    environment:
+      SCIM_MOCK_TOKEN: ${ATLASSIAN_SCIM_TOKEN:-local-scim-token}
+      # Groups that already exist in the Atlassian organisation and need their takeover approved,
+      # mapped to their current members' Atlassian userNames
+      SCIM_MOCK_CONFLICTING_GROUPS: '{"jira-trunk-approver": ["bob@id.openmrs.org", "former-member@id.openmrs.org"]}'
+    ports:
+      - "127.0.0.1:8001:8000"
