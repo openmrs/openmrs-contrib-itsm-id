@@ -105,6 +105,8 @@ entries:
         - |
           if not request.user.usersourceconnection_set.filter(source__slug="%s").exists():
               raise SkipObject
+          if "@" in request.user.username:
+              raise SkipObject
           email = request.user.username + "@%s"
           return {
               "userName": email,

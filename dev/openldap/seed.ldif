@@ -1,7 +1,7 @@
 # Fictional seed data mirroring the shape of ldap.openmrs.org. The __*_PASSWORD__ placeholders are
 # replaced with password hashes by entrypoint.sh. erin is in none of the Atlassian groups and frank is only
-# in confluence-users. Groups carry an empty member value, as production does, because groupOfNames
-# requires at least one member.
+# in confluence-users. grace has a legacy email-address uid, so she is skipped by the SCIM sync. Groups
+# carry an empty member value, as production does, because groupOfNames requires at least one member.
 
 dn: dc=openmrs,dc=org
 objectClass: dcObject
@@ -85,6 +85,16 @@ cn: Frank
 sn: Fofanah
 displayName: Frank Fofanah
 mail: frank@example.com
+userPassword: __USER_PASSWORD__
+
+dn: uid=grace@example.com,ou=users,dc=openmrs,dc=org
+objectClass: inetOrgPerson
+objectClass: extensibleObject
+uid: grace@example.com
+cn: Grace
+sn: Gatete
+displayName: Grace Gatete
+mail: grace@example.com
 userPassword: __USER_PASSWORD__
 
 dn: cn=confluence-administrators,ou=groups,dc=openmrs,dc=org
@@ -172,6 +182,7 @@ member: uid=alice,ou=users,dc=openmrs,dc=org
 member: uid=bob,ou=users,dc=openmrs,dc=org
 member: uid=carol,ou=users,dc=openmrs,dc=org
 member: uid=dave,ou=users,dc=openmrs,dc=org
+member: uid=grace@example.com,ou=users,dc=openmrs,dc=org
 
 dn: cn=infrastructure,ou=groups,dc=openmrs,dc=org
 objectClass: groupOfNames
