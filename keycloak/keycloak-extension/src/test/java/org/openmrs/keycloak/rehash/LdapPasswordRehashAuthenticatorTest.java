@@ -7,9 +7,13 @@ import static org.mockito.Mockito.*;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -98,6 +102,40 @@ class LdapPasswordRehashAuthenticatorTest {
     verify(provider).updateCredential(eq(realm), eq(user), any());
     verify(ldap, times(2)).storedPasswords(provider, realm, user);
     verify(context).success();
+  }
+
+  @Test
+  @DisplayName("never logs part of a cleartext password that looks like a scheme")
+  void doesNotLogBracedCleartext() {
+    String password = "{MySecretPrefix}rest";
+    form.putSingle("password", password);
+    storedThenRewritten(List.of(SSHA), List.of(password));
+
+    List<String> logged = new ArrayList<>();
+    Handler capture =
+        new Handler() {
+          @Override
+          public void publish(LogRecord record) {
+            logged.add(record.getMessage() + " " + Arrays.toString(record.getParameters()));
+          }
+
+          @Override
+          public void flush() {}
+
+          @Override
+          public void close() {}
+        };
+    java.util.logging.Logger jul =
+        java.util.logging.Logger.getLogger(LdapPasswordRehashAuthenticator.class.getName());
+    jul.addHandler(capture);
+    try {
+      authenticator.authenticate(context);
+    } finally {
+      jul.removeHandler(capture);
+    }
+
+    assertFalse(logged.isEmpty());
+    assertTrue(logged.stream().noneMatch(line -> line.contains("MySecretPrefix")), logged::toString);
   }
 
   @Test
@@ -246,6 +284,9 @@ class LdapPasswordRehashAuthenticatorTest {
       assertEquals("{ARGON2}", LdapPasswordRehashAuthenticator.schemeOf(ARGON2));
       assertEquals("cleartext", LdapPasswordRehashAuthenticator.schemeOf("s3cret-password"));
       assertEquals("cleartext", LdapPasswordRehashAuthenticator.schemeOf("{unterminated"));
+      assertEquals("{SSHA}", LdapPasswordRehashAuthenticator.schemeOf("{ssha}abc"));
+      // A cleartext password can look like a scheme, so only known scheme names are logged
+      assertEquals("cleartext", LdapPasswordRehashAuthenticator.schemeOf("{MySecret}rest"));
     }
 
     @Test
