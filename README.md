@@ -128,6 +128,36 @@ Choose "OpenMRS Mapper For NameID."
 The extension is built as a `jar` and will be copied to the Keycloak image during the Keycloak image build. Learn more
 about Keycloak extensions [here](a link).
 
+### Upgrading LDAP password hashes
+
+Passwords live in LDAP, and OpenLDAP only applies its hashing scheme (`olcPasswordHash`) when a password is
+written. It never rehashes on login, so users who set their password before the scheme changed keep the old hash
+(or, for passwords written without hashing, a cleartext value) until they change it.
+
+The "Upgrade LDAP Password Hash" authenticator (`ldap-password-rehash`) closes that gap. Placed directly after the
+username/password form, it reads the user's `userPassword` from LDAP during login and, if any value doesn't start
+with the current scheme (`{ARGON2}` by default), checks the submitted password against LDAP again and writes it
+back, so the directory stores it with its current scheme. It never blocks a login: any problem is logged and the
+login carries on. A successful upgrade is logged at INFO as `Upgraded the LDAP password hash for <username>`.
+
+It does nothing unless:
+
+- the user comes from an LDAP user federation provider whose edit mode is `WRITABLE`
+- the LDAP bind user can read `userPassword` (if it can't, nothing is ever rewritten)
+- the password was typed into the form in that request (not, for example, a login through an identity provider or
+  an existing session)
+
+The step is already in the `forms` flow of `realm-export.json`, which only applies when the realm is first
+created. For an existing realm, the built-in `browser` flow can't be changed, so duplicate it, add "Upgrade LDAP
+Password Hash" as a `REQUIRED` step directly after "Username Password Form" inside the copy's forms sub-flow, and
+bind the copy as the browser flow. Optionally configure the step's "Current scheme": including the hash
+parameters (for example `{ARGON2}$argon2i$v=19$m=65536,t=3,p=1$`) also upgrades hashes made with weaker
+settings.
+
+The directory has to be set up to hash with the new scheme first; see `ldap-new` in
+[openmrs-contrib-ansible-docker-compose](https://github.com/openmrs/openmrs-contrib-ansible-docker-compose).
+Otherwise the step rewrites the password with the same old scheme on every login.
+
 ### Keycloak Theme
 
 This theme is to enhace the look and feel of the login and registration process.

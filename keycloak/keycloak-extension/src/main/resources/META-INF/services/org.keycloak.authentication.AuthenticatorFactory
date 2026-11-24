@@ -1,1 +1,2 @@
 org.openmrs.keycloak.turnstile.TurnstileResetCredentialChooseUser
+org.openmrs.keycloak.rehash.LdapPasswordRehashAuthenticatorFactory
