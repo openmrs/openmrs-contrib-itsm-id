@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
@@ -48,8 +49,12 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
   private final LdapPasswords ldap;
   private final Clock clock;
 
-  /** When rewrites may resume after LDAP stored one without the configured scheme. */
-  private volatile Instant pausedUntil = Instant.MIN;
+  /**
+   * When rewrites may resume after LDAP stored one without the configured scheme, by LDAP provider
+   * component id and scheme. The authenticator is shared by every realm, provider and flow, so one
+   * misconfigured directory mustn't pause the others.
+   */
+  private final Map<String, Instant> pausedUntil = new ConcurrentHashMap<>();
 
   LdapPasswordRehashAuthenticator(LdapPasswords ldap) {
     this(ldap, Clock.systemUTC());
@@ -108,7 +113,9 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
       return;
     }
     String scheme = scheme(context.getAuthenticatorConfig());
-    if (isCurrent(stored, scheme) || clock.instant().isBefore(pausedUntil)) {
+    String pauseKey = user.getFederationLink() + " " + scheme;
+    if (isCurrent(stored, scheme)
+        || clock.instant().isBefore(pausedUntil.getOrDefault(pauseKey, Instant.MIN))) {
       return;
     }
 
@@ -126,14 +133,15 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
     } else {
       // Otherwise every login would rewrite a password again. Nothing from the stored value is
       // logged: it can't be told apart from a cleartext password, which could look like a hash
-      pausedUntil = clock.instant().plus(PAUSE_AFTER_MISMATCH);
+      Instant resume = clock.instant().plus(PAUSE_AFTER_MISMATCH);
+      pausedUntil.put(pauseKey, resume);
       LOG.warnf(
           "Rewrote the LDAP password for %s but LDAP did not store it with %s; pausing rewrites"
-              + " until %s. Check the directory's olcPasswordHash and olcPPolicyHashCleartext"
+              + " from this LDAP provider until %s. Check the directory's olcPasswordHash and olcPPolicyHashCleartext"
               + " settings",
           user.getUsername(),
           scheme,
-          pausedUntil);
+          resume);
     }
   }
 

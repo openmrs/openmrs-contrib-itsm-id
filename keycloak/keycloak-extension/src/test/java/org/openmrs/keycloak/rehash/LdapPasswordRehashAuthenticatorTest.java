@@ -166,6 +166,30 @@ class LdapPasswordRehashAuthenticatorTest {
   }
 
   @Test
+  @DisplayName("pauses only the LDAP provider whose directory didn't store the scheme")
+  void pauseIsPerProvider() {
+    LdapPasswordRehashAuthenticator paused =
+        new LdapPasswordRehashAuthenticator(ldap, new MutableClock());
+    stored(SSHA);
+    paused.authenticate(context);
+
+    UserModel other = mock(UserModel.class);
+    LDAPStorageProvider otherProvider = mock(LDAPStorageProvider.class);
+    when(context.getUser()).thenReturn(other);
+    when(other.getUsername()).thenReturn("carol");
+    when(other.getFederationLink()).thenReturn("other-ldap-component");
+    when(ldap.providerFor(session, realm, other)).thenReturn(otherProvider);
+    when(otherProvider.getEditMode()).thenReturn(EditMode.WRITABLE);
+    when(otherProvider.isValid(eq(realm), eq(other), any())).thenReturn(true);
+    when(otherProvider.updateCredential(eq(realm), eq(other), any())).thenReturn(true);
+    when(ldap.storedPasswords(otherProvider, realm, other))
+        .thenReturn(List.of(SSHA), List.of(ARGON2));
+    paused.authenticate(context);
+
+    verify(otherProvider).updateCredential(eq(realm), eq(other), any());
+  }
+
+  @Test
   @DisplayName("lets the login continue when Keycloak's LDAP classes can't be linked")
   void continuesOnLinkageError() {
     when(ldap.storedPasswords(provider, realm, user))
