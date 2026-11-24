@@ -7,6 +7,11 @@ import static org.mockito.Mockito.*;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -144,6 +149,41 @@ class LdapPasswordRehashAuthenticatorTest {
   }
 
   @Test
+  @DisplayName("pauses rewrites after LDAP stores one without the scheme, then resumes")
+  void pausesAfterMismatch() {
+    MutableClock clock = new MutableClock();
+    LdapPasswordRehashAuthenticator paused = new LdapPasswordRehashAuthenticator(ldap, clock);
+    stored(SSHA);
+
+    paused.authenticate(context);
+    paused.authenticate(context);
+    verify(provider, times(1)).updateCredential(eq(realm), eq(user), any());
+
+    clock.advance(LdapPasswordRehashAuthenticator.PAUSE_AFTER_MISMATCH.plusSeconds(1));
+    paused.authenticate(context);
+    verify(provider, times(2)).updateCredential(eq(realm), eq(user), any());
+    verify(context, times(3)).success();
+  }
+
+  @Test
+  @DisplayName("lets the login continue when Keycloak's LDAP classes can't be linked")
+  void continuesOnLinkageError() {
+    when(ldap.storedPasswords(provider, realm, user))
+        .thenThrow(new NoClassDefFoundError("org/keycloak/storage/ldap/Example"));
+    assertDoesNotThrow(() -> authenticator.authenticate(context));
+    verify(context).success();
+  }
+
+  @Test
+  @DisplayName("lets the login continue when logging the failure fails too")
+  void continuesWhenFailureLoggingFails() {
+    when(ldap.storedPasswords(provider, realm, user)).thenThrow(new RuntimeException("LDAP down"));
+    when(user.getUsername()).thenThrow(new IllegalStateException("user storage down"));
+    assertDoesNotThrow(() -> authenticator.authenticate(context));
+    verify(context).success();
+  }
+
+  @Test
   @DisplayName("doesn't re-read LDAP when the provider declines the update")
   void updateDeclined() {
     stored(SSHA);
@@ -266,6 +306,30 @@ class LdapPasswordRehashAuthenticatorTest {
     authenticator.action(context);
     verify(context).success();
     verifyNoInteractions(ldap);
+  }
+
+  /** A clock the pause tests can move forward. */
+  private static final class MutableClock extends Clock {
+    private Instant now = Instant.parse("2026-01-01T00:00:00Z");
+
+    void advance(Duration duration) {
+      now = now.plus(duration);
+    }
+
+    @Override
+    public Instant instant() {
+      return now;
+    }
+
+    @Override
+    public ZoneId getZone() {
+      return ZoneOffset.UTC;
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return this;
+    }
   }
 
   @Nested

@@ -1,6 +1,9 @@
 package org.openmrs.keycloak.rehash;
 
 import jakarta.ws.rs.core.MultivaluedMap;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -27,7 +30,9 @@ import org.keycloak.storage.ldap.LDAPStorageProvider;
  *
  * <p>It never affects whether the login succeeds: every problem is logged and the flow continues.
  * The submitted password is checked against LDAP again before it is written, so a password is only
- * ever written back if the directory already accepts it.
+ * ever written back if the directory already accepts it. If LDAP stores a rewritten password
+ * without the configured scheme, the directory isn't set up for it, so rewrites stop for {@link
+ * #PAUSE_AFTER_MISMATCH} rather than happening on every login.
  */
 public class LdapPasswordRehashAuthenticator implements Authenticator {
 
@@ -38,24 +43,45 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
 
   static final String DEFAULT_SCHEME = "{ARGON2}";
 
+  static final Duration PAUSE_AFTER_MISMATCH = Duration.ofHours(1);
+
   private final LdapPasswords ldap;
+  private final Clock clock;
+
+  /** When rewrites may resume after LDAP stored one without the configured scheme. */
+  private volatile Instant pausedUntil = Instant.MIN;
 
   LdapPasswordRehashAuthenticator(LdapPasswords ldap) {
+    this(ldap, Clock.systemUTC());
+  }
+
+  LdapPasswordRehashAuthenticator(LdapPasswords ldap, Clock clock) {
     this.ldap = ldap;
+    this.clock = clock;
   }
 
   @Override
   public void authenticate(AuthenticationFlowContext context) {
     try {
       rehashIfNeeded(context);
-    } catch (RuntimeException e) {
+    } catch (RuntimeException | LinkageError e) {
+      // LinkageError too: this relies on Keycloak's LDAP internals, which can change on upgrade
+      logFailure(context, e);
+    }
+    context.success();
+  }
+
+  private static void logFailure(AuthenticationFlowContext context, Throwable e) {
+    try {
       UserModel user = context.getUser();
       LOG.warnf(
           e,
           "Could not upgrade the LDAP password hash for %s",
           user == null ? null : user.getUsername());
+    } catch (RuntimeException | LinkageError loggingFailure) {
+      e.addSuppressed(loggingFailure);
+      LOG.warn("Could not upgrade the LDAP password hash", e);
     }
-    context.success();
   }
 
   private void rehashIfNeeded(AuthenticationFlowContext context) {
@@ -82,7 +108,7 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
       return;
     }
     String scheme = scheme(context.getAuthenticatorConfig());
-    if (isCurrent(stored, scheme)) {
+    if (isCurrent(stored, scheme) || clock.instant().isBefore(pausedUntil)) {
       return;
     }
 
@@ -98,14 +124,16 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
     if (isCurrent(rewritten, scheme)) {
       LOG.infof("Upgraded the LDAP password hash for %s", user.getUsername());
     } else {
-      // Otherwise every login would quietly rewrite the password again. Nothing from the stored
-      // value is logged: it can't be told apart from a cleartext password, which could look like
-      // a hash
+      // Otherwise every login would rewrite a password again. Nothing from the stored value is
+      // logged: it can't be told apart from a cleartext password, which could look like a hash
+      pausedUntil = clock.instant().plus(PAUSE_AFTER_MISMATCH);
       LOG.warnf(
-          "Rewrote the LDAP password for %s but LDAP did not store it with %s; check the"
-              + " directory's olcPasswordHash and olcPPolicyHashCleartext settings",
+          "Rewrote the LDAP password for %s but LDAP did not store it with %s; pausing rewrites"
+              + " until %s. Check the directory's olcPasswordHash and olcPPolicyHashCleartext"
+              + " settings",
           user.getUsername(),
-          scheme);
+          scheme,
+          pausedUntil);
     }
   }
 
