@@ -156,7 +156,8 @@ settings.
 
 The directory has to be set up to hash with the new scheme first; see `ldap-new` in
 [openmrs-contrib-ansible-docker-compose](https://github.com/openmrs/openmrs-contrib-ansible-docker-compose).
-Otherwise the step rewrites the password with the same old scheme on every login.
+Otherwise LDAP stores the rewritten password with the old scheme again; the step then logs a warning and stops
+rewriting passwords from that LDAP provider for an hour at a time.
 
 ### Keycloak Theme
 
