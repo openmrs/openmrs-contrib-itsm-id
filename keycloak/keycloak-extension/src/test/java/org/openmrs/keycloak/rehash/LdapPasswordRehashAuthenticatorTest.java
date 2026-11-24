@@ -190,6 +190,21 @@ class LdapPasswordRehashAuthenticatorTest {
   }
 
   @Test
+  @DisplayName("shares a provider's pause between spellings of the same scheme")
+  void pauseIgnoresSchemeCase() {
+    LdapPasswordRehashAuthenticator paused =
+        new LdapPasswordRehashAuthenticator(ldap, new MutableClock());
+    stored(SSHA);
+    for (String scheme : List.of("{ARGON2}", "{argon2}")) {
+      AuthenticatorConfigModel config = new AuthenticatorConfigModel();
+      config.setConfig(Map.of(LdapPasswordRehashAuthenticator.SCHEME_CONFIG, scheme));
+      when(context.getAuthenticatorConfig()).thenReturn(config);
+      paused.authenticate(context);
+    }
+    verify(provider, times(1)).updateCredential(eq(realm), eq(user), any());
+  }
+
+  @Test
   @DisplayName("lets the login continue when Keycloak's LDAP classes can't be linked")
   void continuesOnLinkageError() {
     when(ldap.storedPasswords(provider, realm, user))

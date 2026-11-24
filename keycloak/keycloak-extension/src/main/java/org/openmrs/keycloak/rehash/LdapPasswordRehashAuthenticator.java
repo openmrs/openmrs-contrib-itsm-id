@@ -113,7 +113,7 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
       return;
     }
     String scheme = scheme(context.getAuthenticatorConfig());
-    String pauseKey = user.getFederationLink() + " " + scheme;
+    String pauseKey = user.getFederationLink() + " " + scheme.toUpperCase(Locale.ROOT);
     if (isCurrent(stored, scheme)
         || clock.instant().isBefore(pausedUntil.getOrDefault(pauseKey, Instant.MIN))) {
       return;
