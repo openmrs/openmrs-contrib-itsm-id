@@ -105,9 +105,9 @@ class LdapPasswordRehashAuthenticatorTest {
   }
 
   @Test
-  @DisplayName("never logs part of a cleartext password that looks like a scheme")
+  @DisplayName("never logs any part of a cleartext password that looks like a hash")
   void doesNotLogBracedCleartext() {
-    String password = "{MySecretPrefix}rest";
+    String password = "{CRYPT}hunter2";
     form.putSingle("password", password);
     storedThenRewritten(List.of(SSHA), List.of(password));
 
@@ -135,7 +135,12 @@ class LdapPasswordRehashAuthenticatorTest {
     }
 
     assertFalse(logged.isEmpty());
-    assertTrue(logged.stream().noneMatch(line -> line.contains("MySecretPrefix")), logged::toString);
+    assertTrue(
+        logged.stream().anyMatch(line -> line.contains("did not store it with")),
+        logged::toString);
+    assertTrue(
+        logged.stream().noneMatch(line -> line.contains("{CRYPT}") || line.contains("hunter2")),
+        logged::toString);
   }
 
   @Test
@@ -275,18 +280,6 @@ class LdapPasswordRehashAuthenticatorTest {
       AuthenticatorConfigModel blank = new AuthenticatorConfigModel();
       blank.setConfig(Map.of(LdapPasswordRehashAuthenticator.SCHEME_CONFIG, "  "));
       assertEquals("{ARGON2}", LdapPasswordRehashAuthenticator.scheme(blank));
-    }
-
-    @Test
-    @DisplayName("logs only the scheme of a stored password, never the hash")
-    void schemeOf() {
-      assertEquals("{SSHA}", LdapPasswordRehashAuthenticator.schemeOf(SSHA));
-      assertEquals("{ARGON2}", LdapPasswordRehashAuthenticator.schemeOf(ARGON2));
-      assertEquals("cleartext", LdapPasswordRehashAuthenticator.schemeOf("s3cret-password"));
-      assertEquals("cleartext", LdapPasswordRehashAuthenticator.schemeOf("{unterminated"));
-      assertEquals("{SSHA}", LdapPasswordRehashAuthenticator.schemeOf("{ssha}abc"));
-      // A cleartext password can look like a scheme, so only known scheme names are logged
-      assertEquals("cleartext", LdapPasswordRehashAuthenticator.schemeOf("{MySecret}rest"));
     }
 
     @Test

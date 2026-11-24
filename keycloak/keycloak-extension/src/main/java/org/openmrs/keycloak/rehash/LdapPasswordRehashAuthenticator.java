@@ -4,7 +4,6 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
@@ -38,14 +37,6 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
   static final String SCHEME_CONFIG = "scheme";
 
   static final String DEFAULT_SCHEME = "{ARGON2}";
-
-  /** Password schemes built into OpenLDAP or provided by its password modules. */
-  private static final Set<String> KNOWN_SCHEMES =
-      Set.of(
-          "{ARGON2}", "{CRYPT}", "{MD5}", "{SMD5}", "{SHA}", "{SSHA}", "{SHA256}", "{SSHA256}",
-          "{SHA384}", "{SSHA384}", "{SHA512}", "{SSHA512}", "{PBKDF2}", "{PBKDF2-SHA1}",
-          "{PBKDF2-SHA256}", "{PBKDF2-SHA512}", "{SASL}", "{CLEARTEXT}", "{TOTP1}", "{TOTP256}",
-          "{TOTP512}");
 
   private final LdapPasswords ldap;
 
@@ -107,28 +98,15 @@ public class LdapPasswordRehashAuthenticator implements Authenticator {
     if (isCurrent(rewritten, scheme)) {
       LOG.infof("Upgraded the LDAP password hash for %s", user.getUsername());
     } else {
-      // Otherwise every login would quietly rewrite the password again
+      // Otherwise every login would quietly rewrite the password again. Nothing from the stored
+      // value is logged: it can't be told apart from a cleartext password, which could look like
+      // a hash
       LOG.warnf(
-          "Rewrote the LDAP password for %s but LDAP stored it as %s rather than %s; check the"
+          "Rewrote the LDAP password for %s but LDAP did not store it with %s; check the"
               + " directory's olcPasswordHash and olcPPolicyHashCleartext settings",
           user.getUsername(),
-          rewritten.stream().map(LdapPasswordRehashAuthenticator::schemeOf).toList(),
           scheme);
     }
-  }
-
-  /**
-   * Describes how a stored password is kept, for logging: its {SCHEME} prefix if that's a scheme
-   * OpenLDAP knows, otherwise "cleartext". Only known names are logged because a cleartext password
-   * can itself start with something like {Secret}.
-   */
-  static String schemeOf(String value) {
-    int end = value == null || !value.startsWith("{") ? -1 : value.indexOf('}');
-    if (end < 0) {
-      return "cleartext";
-    }
-    String scheme = value.substring(0, end + 1).toUpperCase(Locale.ROOT);
-    return KNOWN_SCHEMES.contains(scheme) ? scheme : "cleartext";
   }
 
   private static String submittedPassword(AuthenticationFlowContext context) {
