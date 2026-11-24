@@ -100,14 +100,21 @@ entries:
     attrs:
       # Atlassian matches accounts by email, and the existing accounts were created through Keycloak's SAML
       # login with the virtual <username>@<domain> address as NameID, so that address is sent instead of
-      # the user's real email. Users not imported from LDAP (e.g. authentik's own admin) are skipped.
+      # the user's real email. Trailing whitespace is stripped, as Keycloak's username lacks it. Users not
+      # imported from LDAP (e.g. authentik's own admin) or without a valid address are skipped; an invalid
+      # address stops the sync.
       expression: !Format
         - |
+          from django.core.exceptions import ValidationError
+          from django.core.validators import validate_email
+
           if not request.user.usersourceconnection_set.filter(source__slug="%s").exists():
               raise SkipObject
-          if "@" in request.user.username:
+          email = request.user.username.rstrip() + "@%s"
+          try:
+              validate_email(email)
+          except ValidationError:
               raise SkipObject
-          email = request.user.username + "@%s"
           return {
               "userName": email,
               "name": {
